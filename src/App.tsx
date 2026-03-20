@@ -42,10 +42,117 @@ import {
 } from 'lucide-react';
 import './App.css';
 
-// Admin Panel Content Component
+// ─────────────────────────────────────────────
+// COMPONENTE CALENDARIO INLINE (sin Dialog)
+// Funciona perfecto en móvil y desktop
+// ─────────────────────────────────────────────
+interface InlineCalendarProps {
+  selectedDate: Date;
+  onSelectDate: (date: Date) => void;
+  onClose: () => void;
+}
+
+function InlineCalendar({ selectedDate, onSelectDate, onClose }: InlineCalendarProps) {
+  const [month, setMonth] = useState(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1));
+
+  const MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const DAYS_HEADER = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+
+  const generateDays = () => {
+    const year = month.getFullYear();
+    const m = month.getMonth();
+    const firstDay = new Date(year, m, 1).getDay();
+    const total = new Date(year, m + 1, 0).getDate();
+    const days: (number | null)[] = [];
+    for (let i = 0; i < firstDay; i++) days.push(null);
+    for (let i = 1; i <= total; i++) days.push(i);
+    return days;
+  };
+
+  const isSelected = (day: number | null) =>
+    day !== null &&
+    day === selectedDate.getDate() &&
+    month.getMonth() === selectedDate.getMonth() &&
+    month.getFullYear() === selectedDate.getFullYear();
+
+  return (
+    // overlay para cerrar al hacer click fuera
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-emerald-900 border border-emerald-700 rounded-2xl shadow-2xl p-4 w-full max-w-xs"
+        onClick={(e) => e.stopPropagation()} // evita que cierre al tocar el calendario
+      >
+        {/* Header mes */}
+        <div className="flex items-center justify-between mb-3">
+          <button
+            onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}
+            className="p-2 hover:bg-emerald-800 rounded-lg active:scale-95 transition-transform"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <span className="font-bold text-sm">
+            {MONTHS[month.getMonth()]} {month.getFullYear()}
+          </span>
+          <button
+            onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}
+            className="p-2 hover:bg-emerald-800 rounded-lg active:scale-95 transition-transform"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Días de la semana */}
+        <div className="grid grid-cols-7 gap-1 text-center mb-1">
+          {DAYS_HEADER.map((d) => (
+            <div key={d} className="text-emerald-400 text-xs py-1 font-medium">{d}</div>
+          ))}
+        </div>
+
+        {/* Días del mes */}
+        <div className="grid grid-cols-7 gap-1 text-center">
+          {generateDays().map((day, i) => (
+            <button
+              key={i}
+              disabled={!day}
+              onClick={() => {
+                if (day) {
+                  onSelectDate(new Date(month.getFullYear(), month.getMonth(), day));
+                  onClose();
+                }
+              }}
+              className={`
+                aspect-square rounded-lg text-sm font-medium transition-all active:scale-95
+                ${!day ? 'invisible' : ''}
+                ${isSelected(day)
+                  ? 'bg-yellow-500 text-black font-bold shadow-lg'
+                  : day ? 'hover:bg-emerald-800 text-white' : ''}
+              `}
+            >
+              {day || ''}
+            </button>
+          ))}
+        </div>
+
+        {/* Botón cerrar */}
+        <button
+          onClick={onClose}
+          className="mt-3 w-full py-2 text-sm text-emerald-400 hover:text-white hover:bg-emerald-800 rounded-lg transition-colors"
+        >
+          Cerrar
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// ADMIN PANEL — calendario también como inline
+// ─────────────────────────────────────────────
 function AdminPanelContent({ activeAdminTab, getDayState, updateVenezuela, updatePeru, updateTriple, updateTerminal, updateMas1, clearVenezuela, clearPeru, clearTriple, clearTerminal, clearMas1, showToast, adminSelectedDate, setAdminSelectedDate }: any) {
   const [localResults, setLocalResults] = useState<Record<string, string>>({});
-  const [adminCalendarMonth, setAdminCalendarMonth] = useState(new Date());
   const [showAdminCalendar, setShowAdminCalendar] = useState(false);
 
   const formatAdminDate = (date: Date) => {
@@ -54,20 +161,6 @@ function AdminPanelContent({ activeAdminTab, getDayState, updateVenezuela, updat
     return `${days[date.getDay()]}, ${date.getDate()} de ${months[date.getMonth()]} de ${date.getFullYear()}`;
   };
 
-  const generateAdminCalendarDays = () => {
-    const year = adminCalendarMonth.getFullYear();
-    const month = adminCalendarMonth.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    const startingDay = firstDay.getDay();
-    const days = [];
-    for (let i = 0; i < startingDay; i++) days.push(null);
-    for (let i = 1; i <= daysInMonth; i++) days.push(i);
-    return days;
-  };
-
-  // Obtener estado para la fecha seleccionada en el admin
   const adminDayState = getDayState(adminSelectedDate);
 
   useEffect(() => {
@@ -77,13 +170,13 @@ function AdminPanelContent({ activeAdminTab, getDayState, updateVenezuela, updat
     } else if (activeAdminTab === 'peru') {
       adminDayState.peru.forEach((s: any) => { results[s.id] = s.result; });
     } else if (activeAdminTab === 'triples') {
-      adminDayState.triples.forEach((s: any) => { 
+      adminDayState.triples.forEach((s: any) => {
         results[`${s.id}_r1`] = s.r1;
         results[`${s.id}_r2`] = s.r2;
         results[`${s.id}_r3`] = s.r3;
       });
     } else if (activeAdminTab === 'terminales') {
-      adminDayState.terminales.forEach((s: any) => { 
+      adminDayState.terminales.forEach((s: any) => {
         results[`${s.id}_r1`] = s.r1;
         results[`${s.id}_r2`] = s.r2;
       });
@@ -118,127 +211,131 @@ function AdminPanelContent({ activeAdminTab, getDayState, updateVenezuela, updat
   };
 
   return (
-    <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
-      {/* Date Picker for Admin */}
-      <div className="bg-emerald-800/50 p-3 rounded-lg mb-4">
-        <label className="text-sm text-emerald-300 mb-2 block">Fecha de los resultados:</label>
-        <div className="flex items-center gap-2">
-          <button 
-            onClick={() => setShowAdminCalendar(!showAdminCalendar)}
-            className="flex items-center gap-2 bg-emerald-700 px-3 py-2 rounded-lg hover:bg-emerald-600 flex-1"
+    <>
+      {/* ✅ FIX: Calendario admin como overlay (fuera del scroll container) */}
+      {showAdminCalendar && (
+        <InlineCalendar
+          selectedDate={adminSelectedDate}
+          onSelectDate={setAdminSelectedDate}
+          onClose={() => setShowAdminCalendar(false)}
+        />
+      )}
+
+      <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
+        {/* Date Picker */}
+        <div className="bg-emerald-800/50 p-3 rounded-lg mb-4">
+          <label className="text-sm text-emerald-300 mb-2 block">Fecha de los resultados:</label>
+          <button
+            onClick={() => setShowAdminCalendar(true)}
+            className="flex items-center gap-2 bg-emerald-700 px-3 py-2 rounded-lg hover:bg-emerald-600 w-full active:scale-95 transition-transform"
           >
-            <Calendar className="w-4 h-4 text-yellow-400" />
-            <span className="text-sm">{formatAdminDate(adminSelectedDate)}</span>
+            <Calendar className="w-4 h-4 text-yellow-400 flex-shrink-0" />
+            <span className="text-sm text-left">{formatAdminDate(adminSelectedDate)}</span>
           </button>
         </div>
-        {showAdminCalendar && (
-          <div className="mt-3 bg-emerald-900 p-3 rounded-lg border border-emerald-700">
-            <div className="flex items-center justify-between mb-2">
-              <button onClick={() => setAdminCalendarMonth(new Date(adminCalendarMonth.getFullYear(), adminCalendarMonth.getMonth() - 1, 1))} className="p-1 hover:bg-emerald-800 rounded"><ChevronLeft className="w-4 h-4" /></button>
-              <span className="text-sm font-bold">{['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][adminCalendarMonth.getMonth()]} {adminCalendarMonth.getFullYear()}</span>
-              <button onClick={() => setAdminCalendarMonth(new Date(adminCalendarMonth.getFullYear(), adminCalendarMonth.getMonth() + 1, 1))} className="p-1 hover:bg-emerald-800 rounded"><ChevronRight className="w-4 h-4" /></button>
+
+        {(activeAdminTab === 'venezuela' || activeAdminTab === 'peru') && (
+          <>
+            <h3 className="font-bold text-yellow-400 mb-2">
+              {activeAdminTab === 'venezuela' ? '🇻🇪 ZooloCASINO Venezuela - 12 Sorteos' : '🇵🇪 ZooloCASINO Perú - 11 Sorteos'}
+            </h3>
+            {(activeAdminTab === 'venezuela' ? adminDayState.venezuela : adminDayState.peru).map((s: any) => (
+              <div key={s.id} className="flex items-center justify-between p-3 bg-emerald-800 rounded-lg">
+                <div>
+                  <div className="font-semibold">{A_NAMES[s.time]}</div>
+                  <div className="text-sm text-emerald-400">{formatTimeDisplay(s.time)}</div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="text"
+                    value={localResults[s.id] || ''}
+                    onChange={(e) => setLocalResults({ ...localResults, [s.id]: e.target.value })}
+                    placeholder="0-40"
+                    className="w-24 text-center bg-emerald-700 border-emerald-600 text-white"
+                  />
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => {
+                      setLocalResults({ ...localResults, [s.id]: '' });
+                      activeAdminTab === 'venezuela' ? clearVenezuela(adminSelectedDate, s.id) : clearPeru(adminSelectedDate, s.id);
+                    }}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </>
+        )}
+
+        {activeAdminTab === 'triples' && (
+          <>
+            <h3 className="font-bold text-yellow-400 mb-2">🎲 Triple ZooloCASINO - 3 Sorteos</h3>
+            {adminDayState.triples.map((s: any) => (
+              <div key={s.id} className="flex items-center justify-between p-3 bg-emerald-800 rounded-lg">
+                <div><div className="font-semibold">{TT_NAMES[s.time]}</div></div>
+                <div className="flex items-center gap-2">
+                  <Input type="text" value={localResults[`${s.id}_r1`] || ''} onChange={(e) => setLocalResults({ ...localResults, [`${s.id}_r1`]: e.target.value })} placeholder="1ra" className="w-16 text-center bg-emerald-700 border-emerald-600 text-white" />
+                  <Input type="text" value={localResults[`${s.id}_r2`] || ''} onChange={(e) => setLocalResults({ ...localResults, [`${s.id}_r2`]: e.target.value })} placeholder="2da" className="w-16 text-center bg-emerald-700 border-emerald-600 text-white" />
+                  <Input type="text" value={localResults[`${s.id}_r3`] || ''} onChange={(e) => setLocalResults({ ...localResults, [`${s.id}_r3`]: e.target.value })} placeholder="3ra" className="w-16 text-center bg-emerald-700 border-emerald-600 text-white" />
+                  <Button size="sm" variant="destructive" onClick={() => clearTriple(adminSelectedDate, s.id)}><Trash2 className="w-4 h-4" /></Button>
+                </div>
+              </div>
+            ))}
+          </>
+        )}
+
+        {activeAdminTab === 'terminales' && (
+          <>
+            <h3 className="font-bold text-yellow-400 mb-2">🔢 Terminal ZooloCASINO - 3 Sorteos</h3>
+            {adminDayState.terminales.map((s: any) => (
+              <div key={s.id} className="flex items-center justify-between p-3 bg-emerald-800 rounded-lg">
+                <div><div className="font-semibold">{TT_NAMES[s.time]}</div></div>
+                <div className="flex items-center gap-2">
+                  <Input type="text" value={localResults[`${s.id}_r1`] || ''} onChange={(e) => setLocalResults({ ...localResults, [`${s.id}_r1`]: e.target.value })} placeholder="T1" className="w-16 text-center bg-emerald-700 border-emerald-600 text-white" />
+                  <Input type="text" value={localResults[`${s.id}_r2`] || ''} onChange={(e) => setLocalResults({ ...localResults, [`${s.id}_r2`]: e.target.value })} placeholder="T2" className="w-16 text-center bg-emerald-700 border-emerald-600 text-white" />
+                  <Button size="sm" variant="destructive" onClick={() => clearTerminal(adminSelectedDate, s.id)}><Trash2 className="w-4 h-4" /></Button>
+                </div>
+              </div>
+            ))}
+          </>
+        )}
+
+        {activeAdminTab === 'mas1' && (
+          <div className="p-4 bg-emerald-800 rounded-lg">
+            <h3 className="font-bold text-yellow-400 mb-4">⭐ MÁS 1 - VIERNES 6:00 PM</h3>
+            <p className="text-emerald-300 text-sm mb-4">Ingresa un número del 0 al 9 más un animal</p>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="text-sm text-emerald-300 mb-1 block">Número (0-9)</label>
+                <Input type="number" min="0" max="9" value={localResults['mas1_numero'] || ''} onChange={(e) => setLocalResults({ ...localResults, mas1_numero: e.target.value })} placeholder="0-9" className="text-center text-xl font-bold bg-emerald-700 border-emerald-600 text-white" />
+              </div>
+              <div>
+                <label className="text-sm text-emerald-300 mb-1 block">Animalito</label>
+                <select value={localResults['mas1_animal'] || ''} onChange={(e) => setLocalResults({ ...localResults, mas1_animal: e.target.value })} className="w-full p-2 rounded bg-emerald-700 border border-emerald-600 text-white">
+                  <option value="">Seleccionar</option>
+                  {ANIMALS.map(a => (<option key={a.num} value={a.num}>{a.num} - {a.name}</option>))}
+                </select>
+              </div>
             </div>
-            <div className="grid grid-cols-7 gap-1 text-center text-xs">
-              {['D', 'L', 'M', 'M', 'J', 'V', 'S'].map(d => <div key={d} className="text-emerald-400 py-1">{d}</div>)}
-              {generateAdminCalendarDays().map((day, i) => (
-                <button 
-                  key={i} 
-                  onClick={() => {
-                    if (day) {
-                      setAdminSelectedDate(new Date(adminCalendarMonth.getFullYear(), adminCalendarMonth.getMonth(), day));
-                      setShowAdminCalendar(false);
-                    }
-                  }} 
-                  disabled={!day} 
-                  className={`p-1 rounded ${day === adminSelectedDate.getDate() && adminCalendarMonth.getMonth() === adminSelectedDate.getMonth() && adminCalendarMonth.getFullYear() === adminSelectedDate.getFullYear() ? 'bg-yellow-500 text-black font-bold' : day ? 'hover:bg-emerald-800' : ''}`}
-                >
-                  {day || ''}
-                </button>
-              ))}
-            </div>
+            <Button size="sm" variant="destructive" onClick={() => clearMas1(adminSelectedDate)} className="mb-4">
+              <Trash2 className="w-4 h-4 mr-2" /> Borrar
+            </Button>
           </div>
         )}
+
+        <Button onClick={handleSave} className="w-full mt-4 bg-yellow-500 hover:bg-yellow-600 text-black font-bold">
+          <Save className="w-4 h-4 mr-2" />Guardar Todos los Cambios
+        </Button>
       </div>
-
-      {(activeAdminTab === 'venezuela' || activeAdminTab === 'peru') && (
-        <>
-          <h3 className="font-bold text-yellow-400 mb-2">{activeAdminTab === 'venezuela' ? '🇻🇪 ZooloCASINO Venezuela - 12 Sorteos' : '🇵🇪 ZooloCASINO Perú - 11 Sorteos'}</h3>
-          {(activeAdminTab === 'venezuela' ? adminDayState.venezuela : adminDayState.peru).map((s: any) => (
-            <div key={s.id} className="flex items-center justify-between p-3 bg-emerald-800 rounded-lg">
-              <div>
-                <div className="font-semibold">{A_NAMES[s.time]}</div>
-                <div className="text-sm text-emerald-400">{formatTimeDisplay(s.time)}</div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Input type="text" value={localResults[s.id] || ''} onChange={(e) => setLocalResults({ ...localResults, [s.id]: e.target.value })} placeholder="0-40" className="w-24 text-center bg-emerald-700 border-emerald-600 text-white" />
-                <Button size="sm" variant="destructive" onClick={() => { setLocalResults({ ...localResults, [s.id]: '' }); activeAdminTab === 'venezuela' ? clearVenezuela(adminSelectedDate, s.id) : clearPeru(adminSelectedDate, s.id); }}><Trash2 className="w-4 h-4" /></Button>
-              </div>
-            </div>
-          ))}
-        </>
-      )}
-
-      {activeAdminTab === 'triples' && (
-        <>
-          <h3 className="font-bold text-yellow-400 mb-2">🎲 Triple ZooloCASINO - 3 Sorteos</h3>
-          {adminDayState.triples.map((s: any) => (
-            <div key={s.id} className="flex items-center justify-between p-3 bg-emerald-800 rounded-lg">
-              <div><div className="font-semibold">{TT_NAMES[s.time]}</div></div>
-              <div className="flex items-center gap-2">
-                <Input type="text" value={localResults[`${s.id}_r1`] || ''} onChange={(e) => setLocalResults({ ...localResults, [`${s.id}_r1`]: e.target.value })} placeholder="1ra" className="w-16 text-center bg-emerald-700 border-emerald-600 text-white" />
-                <Input type="text" value={localResults[`${s.id}_r2`] || ''} onChange={(e) => setLocalResults({ ...localResults, [`${s.id}_r2`]: e.target.value })} placeholder="2da" className="w-16 text-center bg-emerald-700 border-emerald-600 text-white" />
-                <Input type="text" value={localResults[`${s.id}_r3`] || ''} onChange={(e) => setLocalResults({ ...localResults, [`${s.id}_r3`]: e.target.value })} placeholder="3ra" className="w-16 text-center bg-emerald-700 border-emerald-600 text-white" />
-                <Button size="sm" variant="destructive" onClick={() => clearTriple(adminSelectedDate, s.id)}><Trash2 className="w-4 h-4" /></Button>
-              </div>
-            </div>
-          ))}
-        </>
-      )}
-
-      {activeAdminTab === 'terminales' && (
-        <>
-          <h3 className="font-bold text-yellow-400 mb-2">🔢 Terminal ZooloCASINO - 3 Sorteos</h3>
-          {adminDayState.terminales.map((s: any) => (
-            <div key={s.id} className="flex items-center justify-between p-3 bg-emerald-800 rounded-lg">
-              <div><div className="font-semibold">{TT_NAMES[s.time]}</div></div>
-              <div className="flex items-center gap-2">
-                <Input type="text" value={localResults[`${s.id}_r1`] || ''} onChange={(e) => setLocalResults({ ...localResults, [`${s.id}_r1`]: e.target.value })} placeholder="T1" className="w-16 text-center bg-emerald-700 border-emerald-600 text-white" />
-                <Input type="text" value={localResults[`${s.id}_r2`] || ''} onChange={(e) => setLocalResults({ ...localResults, [`${s.id}_r2`]: e.target.value })} placeholder="T2" className="w-16 text-center bg-emerald-700 border-emerald-600 text-white" />
-                <Button size="sm" variant="destructive" onClick={() => clearTerminal(adminSelectedDate, s.id)}><Trash2 className="w-4 h-4" /></Button>
-              </div>
-            </div>
-          ))}
-        </>
-      )}
-
-      {activeAdminTab === 'mas1' && (
-        <div className="p-4 bg-emerald-800 rounded-lg">
-          <h3 className="font-bold text-yellow-400 mb-4">⭐ MÁS 1 - VIERNES 6:00 PM</h3>
-          <p className="text-emerald-300 text-sm mb-4">Ingresa un número del 0 al 9 más un animal</p>
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div>
-              <label className="text-sm text-emerald-300 mb-1 block">Número (0-9)</label>
-              <Input type="number" min="0" max="9" value={localResults['mas1_numero'] || ''} onChange={(e) => setLocalResults({ ...localResults, mas1_numero: e.target.value })} placeholder="0-9" className="text-center text-xl font-bold bg-emerald-700 border-emerald-600 text-white" />
-            </div>
-            <div>
-              <label className="text-sm text-emerald-300 mb-1 block">Animalito</label>
-              <select value={localResults['mas1_animal'] || ''} onChange={(e) => setLocalResults({ ...localResults, mas1_animal: e.target.value })} className="w-full p-2 rounded bg-emerald-700 border border-emerald-600 text-white">
-                <option value="">Seleccionar</option>
-                {ANIMALS.map(a => (<option key={a.num} value={a.num}>{a.num} - {a.name}</option>))}
-              </select>
-            </div>
-          </div>
-          <Button size="sm" variant="destructive" onClick={() => clearMas1(adminSelectedDate)} className="mb-4"><Trash2 className="w-4 h-4 mr-2" /> Borrar</Button>
-        </div>
-      )}
-
-      <Button onClick={handleSave} className="w-full mt-4 bg-yellow-500 hover:bg-yellow-600 text-black font-bold">
-        <Save className="w-4 h-4 mr-2" />Guardar Todos los Cambios
-      </Button>
-    </div>
+    </>
   );
 }
 
+// ─────────────────────────────────────────────
+// APP PRINCIPAL
+// ─────────────────────────────────────────────
 function App() {
   const [selectedGame, setSelectedGame] = useState<'peru' | 'venezuela' | 'triples' | 'terminales' | 'mas1'>('venezuela');
   const [activeSection, setActiveSection] = useState<'inicio' | 'resultados' | 'animales' | 'horarios' | 'preguntas' | 'contacto'>('inicio');
@@ -253,13 +350,13 @@ function App() {
   const [animalView, setAnimalView] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date());
+  // ✅ FIX: datePickerOpen ahora abre el InlineCalendar en vez del Dialog
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [showRules, setShowRules] = useState(false);
   const [sorteosDropdownOpen, setSorteosDropdownOpen] = useState(false);
   const [resultadosDropdownOpen, setResultadosDropdownOpen] = useState(false);
   const [adminSelectedDate, setAdminSelectedDate] = useState(new Date());
-  const [calendarMonth, setCalendarMonth] = useState(new Date());
-  
+
   const {
     getDayState,
     venezuelaTime,
@@ -282,13 +379,24 @@ function App() {
     clearMas1
   } = useZooloState();
 
-  // Obtener estado para la fecha seleccionada en resultados
   const dayState = getDayState(selectedDate);
   const { venezuela: venezuelaResults, peru: peruResults, triples: triplesResults, terminales: terminalesResults, mas1: mas1Result } = dayState;
 
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
+
+  // Cierra dropdowns al tocar fuera en móvil
+  useEffect(() => {
+    const handleClick = () => {
+      setSorteosDropdownOpen(false);
+      setResultadosDropdownOpen(false);
+    };
+    if (sorteosDropdownOpen || resultadosDropdownOpen) {
+      document.addEventListener('click', handleClick);
+    }
+    return () => document.removeEventListener('click', handleClick);
+  }, [sorteosDropdownOpen, resultadosDropdownOpen]);
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type });
@@ -329,18 +437,15 @@ function App() {
   const getAnimalDelMomento = useCallback(() => {
     const sorteos = getSorteos();
     for (let i = sorteos.length - 1; i >= 0; i--) {
-      if (sorteos[i].result) {
-        return { sorteo: sorteos[i], animal: getAnimal(sorteos[i].result) };
-      }
+      if (sorteos[i].result) return { sorteo: sorteos[i], animal: getAnimal(sorteos[i].result) };
     }
     for (const s of sorteos) {
-      if (!isPast(s.time, selectedGame === 'peru' ? 'peru' : 'venezuela')) {
-        return { sorteo: s, animal: null };
-      }
+      if (!isPast(s.time, selectedGame === 'peru' ? 'peru' : 'venezuela')) return { sorteo: s, animal: null };
     }
     return { sorteo: sorteos[0], animal: null };
   }, [selectedGame, venezuelaResults, peruResults, isPast]);
 
+  // ✅ FIX: filteredAnimals con min-height en el contenedor para evitar colapso en móvil
   const filteredAnimals = ANIMALS.filter(animal => {
     if (animalFilter !== 'todos' && animal.color !== animalFilter.slice(0, -1)) return false;
     if (searchQuery) {
@@ -379,23 +484,12 @@ function App() {
     }
   };
 
-  // Get animal image path based on country
   const getAnimalImagePath = (animal: Animal, country: 'venezuela' | 'peru') => {
-    // Convert animal name to filename format (lowercase, no accents)
-    const nameToFile = (name: string) => {
-      return name.toLowerCase()
-        .replace(/á/g, 'a')
-        .replace(/é/g, 'e')
-        .replace(/í/g, 'i')
-        .replace(/ó/g, 'o')
-        .replace(/ú/g, 'u')
-        .replace(/ñ/g, 'n')
-        .replace(/ü/g, 'u');
-    };
-    
-    if (country === 'peru') {
-      return `/animals/peru/${animal.num}-${nameToFile(animal.name)}.jpg`;
-    }
+    const nameToFile = (name: string) =>
+      name.toLowerCase()
+        .replace(/á/g, 'a').replace(/é/g, 'e').replace(/í/g, 'i')
+        .replace(/ó/g, 'o').replace(/ú/g, 'u').replace(/ñ/g, 'n').replace(/ü/g, 'u');
+    if (country === 'peru') return `/animals/peru/${animal.num}-${nameToFile(animal.name)}.jpg`;
     return `/animals/${animal.num}-${nameToFile(animal.name)}.jpg`;
   };
 
@@ -413,12 +507,7 @@ function App() {
             <div className="sorteo-time"><Clock className="w-4 h-4" />{formatTimeDisplay(sorteo.time)}</div>
             <span className="text-2xl">{country === 'peru' ? '🇵🇪' : '🇻🇪'}</span>
           </div>
-          <img 
-            src={getAnimalImagePath(animal, country)} 
-            alt={animal.name} 
-            className={`sorteo-animal-img-large border-4 ${borderClass}`}
-            onError={(e) => { (e.target as HTMLImageElement).src = '/animals/0-delfin.jpg'; }}
-          />
+          <img src={getAnimalImagePath(animal, country)} alt={animal.name} className={`sorteo-animal-img-large border-4 ${borderClass}`} onError={(e) => { (e.target as HTMLImageElement).src = '/animals/0-delfin.jpg'; }} />
           <div className="sorteo-animal-name">{animal.name}</div>
           <div className="sorteo-animal-num">N° {sorteo.result}</div>
           <Badge className="sorteo-badge finalizado">Finalizado</Badge>
@@ -517,34 +606,6 @@ function App() {
     );
   };
 
-  const generateCalendarDays = (date: Date) => {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    const startingDay = firstDay.getDay();
-    const days = [];
-    for (let i = 0; i < startingDay; i++) days.push(null);
-    for (let i = 1; i <= daysInMonth; i++) days.push(i);
-    return days;
-  };
-
-  const handlePrevMonth = () => {
-    setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1));
-  };
-
-  const handleNextMonth = () => {
-    setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1));
-  };
-
-  const handleDateSelect = (day: number | null) => {
-    if (day !== null && day !== undefined) {
-      setSelectedDate(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), day));
-      setDatePickerOpen(false);
-    }
-  };
-
   const { sorteo: animalDelMomento, animal: animalMomentoData } = getAnimalDelMomento();
   const countdown = getNextDrawCountdown();
 
@@ -563,6 +624,16 @@ function App() {
 
   return (
     <div className="min-h-screen bg-emerald-900 text-white">
+
+      {/* ✅ InlineCalendar para el selector de fecha de resultados */}
+      {datePickerOpen && (
+        <InlineCalendar
+          selectedDate={selectedDate}
+          onSelectDate={setSelectedDate}
+          onClose={() => setDatePickerOpen(false)}
+        />
+      )}
+
       {/* Toast */}
       {toast && (
         <div className={`fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 ${toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'} text-white`}>
@@ -613,13 +684,13 @@ function App() {
               </Button>
             </DialogTitle>
           </DialogHeader>
-          
+
           <div className="flex gap-2 mb-4 flex-wrap">
             {[
-              { key: 'venezuela', label: '🇻🇪 ZooloCASINO Venezuela' },
-              { key: 'peru', label: '🇵🇪 ZooloCASINO Perú' },
-              { key: 'triples', label: '🎲 Triple ZooloCASINO' },
-              { key: 'terminales', label: '🔢 Terminal ZooloCASINO' },
+              { key: 'venezuela', label: '🇻🇪 Venezuela' },
+              { key: 'peru', label: '🇵🇪 Perú' },
+              { key: 'triples', label: '🎲 Triple' },
+              { key: 'terminales', label: '🔢 Terminal' },
               { key: 'mas1', label: '⭐ Más 1' }
             ].map((tab) => (
               <Button key={tab.key} size="sm" variant={activeAdminTab === tab.key ? 'default' : 'outline'} onClick={() => setActiveAdminTab(tab.key as any)} className={activeAdminTab === tab.key ? 'bg-yellow-500 text-black hover:bg-yellow-600' : 'border-emerald-600 text-emerald-300 hover:bg-emerald-800'}>
@@ -628,8 +699,8 @@ function App() {
             ))}
           </div>
 
-          <AdminPanelContent 
-            activeAdminTab={activeAdminTab} 
+          <AdminPanelContent
+            activeAdminTab={activeAdminTab}
             getDayState={getDayState}
             updateVenezuela={updateVenezuela}
             updatePeru={updatePeru}
@@ -645,33 +716,6 @@ function App() {
             adminSelectedDate={adminSelectedDate}
             setAdminSelectedDate={setAdminSelectedDate}
           />
-        </DialogContent>
-      </Dialog>
-
-      {/* Date Picker */}
-      <Dialog open={datePickerOpen} onOpenChange={setDatePickerOpen}>
-        <DialogContent className="bg-emerald-900 border-emerald-700 text-white max-w-sm">
-          <DialogHeader><DialogTitle className="text-center">Seleccionar Fecha</DialogTitle></DialogHeader>
-          <div className="p-4">
-            <div className="flex items-center justify-between mb-4">
-              <button onClick={handlePrevMonth} className="p-2 hover:bg-emerald-800 rounded"><ChevronLeft className="w-5 h-5" /></button>
-              <span className="font-bold">{['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][calendarMonth.getMonth()]} {calendarMonth.getFullYear()}</span>
-              <button onClick={handleNextMonth} className="p-2 hover:bg-emerald-800 rounded"><ChevronRight className="w-5 h-5" /></button>
-            </div>
-            <div className="grid grid-cols-7 gap-1 text-center text-sm">
-              {['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'].map(d => <div key={d} className="text-emerald-400 py-1">{d}</div>)}
-              {generateCalendarDays(calendarMonth).map((day, i) => (
-                <button 
-                  key={i} 
-                  onClick={() => handleDateSelect(day)} 
-                  disabled={!day} 
-                  className={`p-2 rounded ${day === selectedDate.getDate() && calendarMonth.getMonth() === selectedDate.getMonth() && calendarMonth.getFullYear() === selectedDate.getFullYear() ? 'bg-yellow-500 text-black font-bold' : day ? 'hover:bg-emerald-800' : ''}`}
-                >
-                  {day || ''}
-                </button>
-              ))}
-            </div>
-          </div>
         </DialogContent>
       </Dialog>
 
@@ -710,7 +754,7 @@ function App() {
       </Dialog>
 
       {/* Navbar */}
-      <nav className="sticky top-0 z-50 bg-emerald-900/95 backdrop-blur-sm border-b border-emerald-800">
+      <nav className="sticky top-0 z-40 bg-emerald-900/95 backdrop-blur-sm border-b border-emerald-800">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-2">
@@ -724,9 +768,9 @@ function App() {
             {/* Desktop Menu */}
             <div className="hidden md:flex items-center gap-1">
               <button onClick={() => setActiveSection('inicio')} className={`px-4 py-2 rounded-lg transition-colors ${activeSection === 'inicio' ? 'bg-yellow-500 text-black' : 'hover:bg-emerald-800'}`}>Inicio</button>
-              
+
               <div className="relative">
-                <button onClick={() => { setSorteosDropdownOpen(!sorteosDropdownOpen); setResultadosDropdownOpen(false); }} className="px-4 py-2 rounded-lg hover:bg-emerald-800 flex items-center gap-1">
+                <button onClick={(e) => { e.stopPropagation(); setSorteosDropdownOpen(!sorteosDropdownOpen); setResultadosDropdownOpen(false); }} className="px-4 py-2 rounded-lg hover:bg-emerald-800 flex items-center gap-1">
                   Sorteos <ChevronDown className="w-4 h-4" />
                 </button>
                 {sorteosDropdownOpen && (
@@ -741,7 +785,7 @@ function App() {
               </div>
 
               <div className="relative">
-                <button onClick={() => { setResultadosDropdownOpen(!resultadosDropdownOpen); setSorteosDropdownOpen(false); }} className="px-4 py-2 rounded-lg hover:bg-emerald-800 flex items-center gap-1">
+                <button onClick={(e) => { e.stopPropagation(); setResultadosDropdownOpen(!resultadosDropdownOpen); setSorteosDropdownOpen(false); }} className="px-4 py-2 rounded-lg hover:bg-emerald-800 flex items-center gap-1">
                   Resultados <ChevronDown className="w-4 h-4" />
                 </button>
                 {resultadosDropdownOpen && (
@@ -774,7 +818,7 @@ function App() {
 
       {/* Mobile Menu */}
       {menuOpen && (
-        <div className="fixed inset-0 z-40 bg-emerald-900 pt-20 md:hidden">
+        <div className="fixed inset-0 z-40 bg-emerald-900 pt-20 md:hidden overflow-y-auto">
           <div className="flex flex-col p-4 space-y-2">
             <button onClick={() => { setActiveSection('inicio'); setMenuOpen(false); }} className="text-left text-lg py-3 border-b border-emerald-800">Inicio</button>
             <div className="py-3 border-b border-emerald-800">
@@ -796,13 +840,12 @@ function App() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-6">
+
         {/* INICIO */}
         {activeSection === 'inicio' && (
           <div className="space-y-8">
-            {/* Hero con móvil y animales flotando */}
             <div className="relative min-h-[500px] flex items-center">
               <div className="grid md:grid-cols-2 gap-8 items-center w-full">
-                {/* Texto */}
                 <div className="text-center md:text-left z-10">
                   <Badge className="bg-emerald-800/80 text-emerald-300 border-emerald-600 px-4 py-1 mb-4">
                     <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse mr-2" />
@@ -825,7 +868,6 @@ function App() {
                   </div>
                 </div>
 
-                {/* Móvil con animales flotando */}
                 <div className="relative flex justify-center">
                   <div className="relative">
                     <Smartphone className="w-64 h-96 text-emerald-700" strokeWidth={1} />
@@ -857,7 +899,6 @@ function App() {
               </div>
             </div>
 
-            {/* Stats */}
             <div className="grid grid-cols-3 gap-4">
               <Card className="bg-emerald-800/50 border-emerald-700 p-4 text-center">
                 <Trophy className="w-6 h-6 mx-auto mb-2 text-yellow-400" />
@@ -876,16 +917,11 @@ function App() {
               </Card>
             </div>
 
-            {/* Animal del Momento */}
             <Card className="bg-emerald-800/50 border-emerald-700 p-6 text-center">
               <h3 className="text-yellow-400 mb-4 flex items-center justify-center gap-2"><Star className="w-4 h-4" />Animal del Momento</h3>
               {animalMomentoData ? (
                 <>
-                  <img 
-                    src={getAnimalImagePath(animalMomentoData, selectedGame === 'peru' ? 'peru' : 'venezuela')} 
-                    alt={animalMomentoData.name} 
-                    className="w-32 h-32 rounded-xl mx-auto mb-4 object-cover" 
-                  />
+                  <img src={getAnimalImagePath(animalMomentoData, selectedGame === 'peru' ? 'peru' : 'venezuela')} alt={animalMomentoData.name} className="w-32 h-32 rounded-xl mx-auto mb-4 object-cover" />
                   <Badge className={`text-lg px-4 py-1 mb-2 ${animalMomentoData.color === 'rojo' ? 'bg-red-500' : animalMomentoData.color === 'verde' ? 'bg-green-500' : 'bg-gray-700'}`}>
                     {animalDelMomento.result}
                   </Badge>
@@ -903,7 +939,6 @@ function App() {
               )}
             </Card>
 
-            {/* Botón ¿Cómo jugar? */}
             <div className="text-center">
               <button onClick={() => setShowRules(true)} className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold px-8 py-4 rounded-xl flex items-center gap-3 mx-auto">
                 <Info className="w-6 h-6" />
@@ -918,8 +953,8 @@ function App() {
         {activeSection === 'resultados' && (
           <div className="space-y-6">
             <div className="flex flex-wrap justify-center gap-2">
-              <button onClick={() => setSelectedGame('venezuela')} className={`flex items-center gap-2 px-4 py-2 rounded-lg ${selectedGame === 'venezuela' ? 'bg-yellow-500 text-black' : 'bg-emerald-800 text-white'}`}><span>🇻🇪</span> ZooloCASINO Venezuela</button>
-              <button onClick={() => setSelectedGame('peru')} className={`flex items-center gap-2 px-4 py-2 rounded-lg ${selectedGame === 'peru' ? 'bg-yellow-500 text-black' : 'bg-emerald-800 text-white'}`}><span>🇵🇪</span> ZooloCASINO Perú</button>
+              <button onClick={() => setSelectedGame('venezuela')} className={`flex items-center gap-2 px-4 py-2 rounded-lg ${selectedGame === 'venezuela' ? 'bg-yellow-500 text-black' : 'bg-emerald-800 text-white'}`}><span>🇻🇪</span> Venezuela</button>
+              <button onClick={() => setSelectedGame('peru')} className={`flex items-center gap-2 px-4 py-2 rounded-lg ${selectedGame === 'peru' ? 'bg-yellow-500 text-black' : 'bg-emerald-800 text-white'}`}><span>🇵🇪</span> Perú</button>
               <button onClick={() => setSelectedGame('triples')} className={`flex items-center gap-2 px-4 py-2 rounded-lg ${selectedGame === 'triples' ? 'bg-yellow-500 text-black' : 'bg-emerald-800 text-white'}`}><Dice3 className="w-4 h-4" /> Triple</button>
               <button onClick={() => setSelectedGame('terminales')} className={`flex items-center gap-2 px-4 py-2 rounded-lg ${selectedGame === 'terminales' ? 'bg-yellow-500 text-black' : 'bg-emerald-800 text-white'}`}><Hash className="w-4 h-4" /> Terminal</button>
               <button onClick={() => setSelectedGame('mas1')} className={`flex items-center gap-2 px-4 py-2 rounded-lg ${selectedGame === 'mas1' ? 'bg-yellow-500 text-black' : 'bg-emerald-800 text-white'}`}><Plus className="w-4 h-4" /> Más 1</button>
@@ -930,11 +965,7 @@ function App() {
                 <h3 className="text-yellow-400 mb-4 flex items-center justify-center gap-2"><Star className="w-4 h-4" />Animal del Momento</h3>
                 {animalMomentoData ? (
                   <>
-                    <img 
-                      src={getAnimalImagePath(animalMomentoData, selectedGame === 'peru' ? 'peru' : 'venezuela')} 
-                      alt={animalMomentoData.name} 
-                      className="w-32 h-32 rounded-xl mx-auto mb-4 object-cover" 
-                    />
+                    <img src={getAnimalImagePath(animalMomentoData, selectedGame === 'peru' ? 'peru' : 'venezuela')} alt={animalMomentoData.name} className="w-32 h-32 rounded-xl mx-auto mb-4 object-cover" />
                     <Badge className={`text-lg px-4 py-1 mb-2 ${animalMomentoData.color === 'rojo' ? 'bg-red-500' : animalMomentoData.color === 'verde' ? 'bg-green-500' : 'bg-gray-700'}`}>
                       {animalDelMomento.result}
                     </Badge>
@@ -961,21 +992,38 @@ function App() {
                 {selectedGame === 'terminales' && '🔢 Resultados Terminal ZooloCASINO'}
                 {selectedGame === 'mas1' && '⭐ Resultado Más 1'}
               </h3>
-              
+
+              {/* ✅ FIX: Navegación de fecha con InlineCalendar */}
               <div className="flex items-center justify-center gap-4 mb-6">
-                <button onClick={() => setSelectedDate(new Date(selectedDate.getTime() - 24 * 60 * 60 * 1000))} className="p-2 bg-emerald-800 rounded-lg hover:bg-emerald-700"><ChevronLeft className="w-5 h-5" /></button>
-                <button onClick={() => setDatePickerOpen(true)} className="flex items-center gap-2 bg-emerald-800 px-4 py-2 rounded-lg hover:bg-emerald-700">
-                  <Calendar className="w-5 h-5 text-yellow-400" />
-                  {formatDate(selectedDate)}
+                <button
+                  onClick={() => setSelectedDate(new Date(selectedDate.getTime() - 24 * 60 * 60 * 1000))}
+                  className="p-2 bg-emerald-800 rounded-lg hover:bg-emerald-700 active:scale-95 transition-transform"
+                >
+                  <ChevronLeft className="w-5 h-5" />
                 </button>
-                <button onClick={() => setSelectedDate(new Date(selectedDate.getTime() + 24 * 60 * 60 * 1000))} className="p-2 bg-emerald-800 rounded-lg hover:bg-emerald-700"><ChevronRight className="w-5 h-5" /></button>
+                <button
+                  onClick={() => setDatePickerOpen(true)}
+                  className="flex items-center gap-2 bg-emerald-800 px-4 py-2 rounded-lg hover:bg-emerald-700 active:scale-95 transition-transform"
+                >
+                  <Calendar className="w-5 h-5 text-yellow-400" />
+                  <span className="text-sm">{formatDate(selectedDate)}</span>
+                </button>
+                <button
+                  onClick={() => setSelectedDate(new Date(selectedDate.getTime() + 24 * 60 * 60 * 1000))}
+                  className="p-2 bg-emerald-800 rounded-lg hover:bg-emerald-700 active:scale-95 transition-transform"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
               </div>
 
-              {selectedGame === 'venezuela' && <div className="grid grid-cols-2 gap-3">{venezuelaResults.map((s) => renderAnimalitoCard(s))}</div>}
-              {selectedGame === 'peru' && <div className="grid grid-cols-2 gap-3">{peruResults.map((s) => renderAnimalitoCard(s))}</div>}
-              {selectedGame === 'triples' && <div className="grid grid-cols-1 md:grid-cols-3 gap-3">{triplesResults.map((s) => renderTripleCard(s))}</div>}
-              {selectedGame === 'terminales' && <div className="grid grid-cols-1 md:grid-cols-3 gap-3">{terminalesResults.map((s) => renderTerminalCard(s))}</div>}
-              {selectedGame === 'mas1' && renderMas1()}
+              {/* ✅ FIX: min-h para evitar pantalla en blanco al buscar en móvil */}
+              <div className="min-h-[200px]">
+                {selectedGame === 'venezuela' && <div className="grid grid-cols-2 gap-3">{venezuelaResults.map((s) => renderAnimalitoCard(s))}</div>}
+                {selectedGame === 'peru' && <div className="grid grid-cols-2 gap-3">{peruResults.map((s) => renderAnimalitoCard(s))}</div>}
+                {selectedGame === 'triples' && <div className="grid grid-cols-1 md:grid-cols-3 gap-3">{triplesResults.map((s) => renderTripleCard(s))}</div>}
+                {selectedGame === 'terminales' && <div className="grid grid-cols-1 md:grid-cols-3 gap-3">{terminalesResults.map((s) => renderTerminalCard(s))}</div>}
+                {selectedGame === 'mas1' && renderMas1()}
+              </div>
             </div>
           </div>
         )}
@@ -987,10 +1035,23 @@ function App() {
               <h2 className="text-2xl font-bold mb-2">Los <span className="text-yellow-400">42</span> Animales</h2>
               <p className="text-emerald-400 text-sm">Conoce todos los animales de la lotería. Cada uno tiene un número y un color asignado.</p>
             </div>
+
+            {/* ✅ FIX: Input de búsqueda con inputMode para mejor comportamiento en móvil */}
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500" />
-              <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Buscar animal o número..." className="pl-10 bg-emerald-800 border-emerald-700 text-white placeholder:text-emerald-500" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500 pointer-events-none" />
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Buscar animal o número..."
+                inputMode="search"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck={false}
+                className="pl-10 bg-emerald-800 border-emerald-700 text-white placeholder:text-emerald-500"
+              />
             </div>
+
             <div className="flex gap-2 justify-center flex-wrap">
               <button onClick={() => setAnimalFilter('todos')} className={`px-4 py-2 rounded-full text-sm ${animalFilter === 'todos' ? 'bg-yellow-500 text-black' : 'bg-emerald-800 text-white'}`}>Todos</button>
               <button onClick={() => setAnimalFilter('rojos')} className={`px-4 py-2 rounded-full text-sm ${animalFilter === 'rojos' ? 'bg-red-500 text-white' : 'bg-emerald-800 text-white'}`}>Rojos</button>
@@ -1002,16 +1063,25 @@ function App() {
               <button onClick={() => setAnimalView('list')} className={`p-2 rounded ${animalView === 'list' ? 'bg-yellow-500 text-black' : 'bg-emerald-800 text-white'}`}><List className="w-5 h-5" /></button>
             </div>
             <div className="text-center text-sm text-emerald-400">Mostrando {filteredAnimals.length} de 42 animales</div>
-            <div className={animalView === 'grid' ? 'grid grid-cols-2 gap-3' : 'space-y-2'}>
-              {filteredAnimals.map((animal) => (
-                <div key={animal.num} className={`bg-emerald-800/50 border border-emerald-700 rounded-xl p-3 flex items-center gap-3 ${animalView === 'grid' ? 'flex-col' : 'flex-row'}`}>
-                  <img src={animal.image} alt={animal.name} className={`rounded-lg object-cover ${animalView === 'grid' ? 'w-20 h-20' : 'w-12 h-12'}`} />
-                  <div className={`text-center ${animalView === 'grid' ? '' : 'text-left flex-1'}`}>
-                    <Badge className={`${animal.color === 'rojo' ? 'bg-red-500' : animal.color === 'verde' ? 'bg-green-500' : 'bg-gray-700'}`}>{animal.num}</Badge>
-                    <div className="font-medium text-sm mt-1">{animal.name}</div>
-                  </div>
+
+            {/* ✅ FIX: min-h-[300px] evita que el contenedor colapse al buscar en móvil */}
+            <div className={`min-h-[300px] ${animalView === 'grid' ? 'grid grid-cols-2 gap-3' : 'space-y-2'}`}>
+              {filteredAnimals.length === 0 ? (
+                <div className="col-span-2 text-center py-16 text-emerald-500">
+                  <Search className="w-10 h-10 mx-auto mb-3 opacity-40" />
+                  <p>No se encontraron animales con "{searchQuery}"</p>
                 </div>
-              ))}
+              ) : (
+                filteredAnimals.map((animal) => (
+                  <div key={animal.num} className={`bg-emerald-800/50 border border-emerald-700 rounded-xl p-3 flex items-center gap-3 ${animalView === 'grid' ? 'flex-col' : 'flex-row'}`}>
+                    <img src={animal.image} alt={animal.name} className={`rounded-lg object-cover ${animalView === 'grid' ? 'w-20 h-20' : 'w-12 h-12'}`} />
+                    <div className={`text-center ${animalView === 'grid' ? '' : 'text-left flex-1'}`}>
+                      <Badge className={`${animal.color === 'rojo' ? 'bg-red-500' : animal.color === 'verde' ? 'bg-green-500' : 'bg-gray-700'}`}>{animal.num}</Badge>
+                      <div className="font-medium text-sm mt-1">{animal.name}</div>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         )}
@@ -1058,7 +1128,7 @@ function App() {
           </div>
         )}
 
-        {/* PREGUNTAS FRECUENTES */}
+        {/* PREGUNTAS */}
         {activeSection === 'preguntas' && (
           <div className="space-y-6">
             <div className="text-center">
@@ -1111,7 +1181,7 @@ function App() {
           <div className="text-center mb-6">
             <img src="/logo.jpg" alt="ZooloCASINO" className="w-12 h-12 rounded-full mx-auto mb-2" />
             <div className="font-bold text-lg">Zoolo <span className="text-yellow-400">CASINO</span></div>
-            <p className="text-emerald-400 text-sm mt-2">La mejor plataforma de resultados de lotería animal en Venezuela. Consulta los resultados en tiempo real y juega con confianza.</p>
+            <p className="text-emerald-400 text-sm mt-2">La mejor plataforma de resultados de lotería animal en Venezuela.</p>
           </div>
           <div className="grid grid-cols-2 gap-6 mb-6">
             <div>
