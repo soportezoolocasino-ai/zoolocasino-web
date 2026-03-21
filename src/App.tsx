@@ -1017,7 +1017,7 @@ function App() {
               </div>
 
               {/* ✅ FIX: min-h para evitar pantalla en blanco al buscar en móvil */}
-              <div className="min-h-[200px]">
+              <div className="min-h-[600px]">
                 {selectedGame === 'venezuela' && <div className="grid grid-cols-2 gap-3">{venezuelaResults.map((s) => renderAnimalitoCard(s))}</div>}
                 {selectedGame === 'peru' && <div className="grid grid-cols-2 gap-3">{peruResults.map((s) => renderAnimalitoCard(s))}</div>}
                 {selectedGame === 'triples' && <div className="grid grid-cols-1 md:grid-cols-3 gap-3">{triplesResults.map((s) => renderTripleCard(s))}</div>}
@@ -1065,7 +1065,7 @@ function App() {
             <div className="text-center text-sm text-emerald-400">Mostrando {filteredAnimals.length} de 42 animales</div>
 
             {/* ✅ FIX: min-h-[300px] evita que el contenedor colapse al buscar en móvil */}
-            <div className={`min-h-[300px] ${animalView === 'grid' ? 'grid grid-cols-2 gap-3' : 'space-y-2'}`}>
+            <div className={`min-h-[600px] ${animalView === 'grid' ? 'grid grid-cols-2 gap-3' : 'space-y-2'}`}>
               {filteredAnimals.length === 0 ? (
                 <div className="col-span-2 text-center py-16 text-emerald-500">
                   <Search className="w-10 h-10 mx-auto mb-3 opacity-40" />
