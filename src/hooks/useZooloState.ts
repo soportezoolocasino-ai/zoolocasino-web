@@ -42,19 +42,6 @@ const createEmptyDayState = (): DayState => ({
   mas1: mkMas1()
 });
 
-// Cargar estado desde localStorage
-const loadState = (): AppState => {
-  try {
-    const saved = localStorage.getItem('zoolocasino_v10');
-    if (saved) {
-      return JSON.parse(saved) as AppState;
-    }
-  } catch (e) {
-    console.error('Error loading state:', e);
-  }
-  return {};
-};
-
 // Autenticación
 const ADMIN_USER = 'cuborubi';
 const ADMIN_PASS = '06251413Jp';
@@ -67,15 +54,11 @@ const getLocalTime = (country: 'venezuela' | 'peru') => {
 };
 
 export const useZooloState = () => {
-  const [state, setState] = useState<AppState>(loadState);
+  // INICIAMOS EL ESTADO VACÍO. Ya no leemos del disco duro (localStorage).
+  const [state, setState] = useState<AppState>({});
   const [venezuelaTime, setVenezuelaTime] = useState<Date>(getLocalTime('venezuela'));
   const [peruTime, setPeruTime] = useState<Date>(getLocalTime('peru'));
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-
-  // Guardar en localStorage
-  useEffect(() => {
-    localStorage.setItem('zoolocasino_v10', JSON.stringify(state));
-  }, [state]);
 
   // Actualizar reloj cada segundo
   useEffect(() => {
@@ -92,7 +75,7 @@ export const useZooloState = () => {
     return state[dateKey] || createEmptyDayState();
   }, [state]);
 
-  // Autenticación
+  // Autenticación (Esta sí la dejamos en localStorage para no perder la sesión)
   const login = useCallback((username: string, password: string): boolean => {
     if (username === ADMIN_USER && password === ADMIN_PASS) {
       setIsAuthenticated(true);
@@ -128,7 +111,7 @@ export const useZooloState = () => {
     return diff > 0 && diff <= 30;
   }, [venezuelaTime, peruTime]);
 
-  // Acciones para Venezuela - con fecha
+  // Acciones para Venezuela
   const updateVenezuela = useCallback((date: Date, id: string, result: string) => {
     const dateKey = formatDateKey(date);
     setState((prev: AppState) => {
@@ -157,7 +140,7 @@ export const useZooloState = () => {
     });
   }, []);
 
-  // Acciones para Perú - con fecha
+  // Acciones para Perú
   const updatePeru = useCallback((date: Date, id: string, result: string) => {
     const dateKey = formatDateKey(date);
     setState((prev: AppState) => {
@@ -186,7 +169,7 @@ export const useZooloState = () => {
     });
   }, []);
 
-  // Acciones para Triples - con fecha
+  // Acciones para Triples
   const updateTriple = useCallback((date: Date, id: string, r1: string, r2: string, r3: string) => {
     const dateKey = formatDateKey(date);
     setState((prev: AppState) => {
@@ -215,7 +198,7 @@ export const useZooloState = () => {
     });
   }, []);
 
-  // Acciones para Terminales - con fecha
+  // Acciones para Terminales
   const updateTerminal = useCallback((date: Date, id: string, r1: string, r2: string) => {
     const dateKey = formatDateKey(date);
     setState((prev: AppState) => {
@@ -244,7 +227,7 @@ export const useZooloState = () => {
     });
   }, []);
 
-  // Acciones para Más 1 - con fecha
+  // Acciones para Más 1
   const updateMas1 = useCallback((date: Date, numero: string, animal_num: string) => {
     const dateKey = formatDateKey(date);
     setState((prev: AppState) => {
@@ -274,25 +257,9 @@ export const useZooloState = () => {
   }, []);
 
   return {
-    state,
-    getDayState,
-    venezuelaTime,
-    peruTime,
-    isAuthenticated,
-    isPast,
-    isNext,
-    login,
-    logout,
-    checkAuth,
-    updateVenezuela,
-    updatePeru,
-    updateTriple,
-    updateTerminal,
-    updateMas1,
-    clearVenezuela,
-    clearPeru,
-    clearTriple,
-    clearTerminal,
-    clearMas1
+    state, getDayState, venezuelaTime, peruTime, isAuthenticated,
+    isPast, isNext, login, logout, checkAuth,
+    updateVenezuela, updatePeru, updateTriple, updateTerminal, updateMas1,
+    clearVenezuela, clearPeru, clearTriple, clearTerminal, clearMas1
   };
 };
