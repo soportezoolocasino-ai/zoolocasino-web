@@ -1,6 +1,7 @@
 services:
+  # El Frontend (Tu página web actual)
   - type: web
-    name: zoolocasino-resultados
+    name: zoolocasino-web
     runtime: static
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist
@@ -11,3 +12,21 @@ services:
     envVars:
       - key: NODE_VERSION
         value: 20
+
+  # El Backend (El "cerebro" que falta)
+  - type: web
+    name: zoolocasino-api
+    runtime: node
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: zoolo-db
+          property: connectionString
+      - key: NODE_VERSION
+        value: 20
+
+databases:
+  - name: zoolo-db
+    plan: free # Cambia a "starter" si necesitas más capacidad
