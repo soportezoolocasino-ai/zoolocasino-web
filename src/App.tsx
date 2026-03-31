@@ -686,14 +686,58 @@ function App() {
       {/* REGLAS DIALOG */}
       <Dialog open={showRules} onOpenChange={setShowRules}>
         <DialogContent className="bg-emerald-900 border-emerald-700 text-white max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>¿Cómo jugar?</DialogTitle></DialogHeader>
-          <div className="space-y-4 p-4">
-            <p>🐾 <strong>Animalito:</strong> Acierta un animal y gana 35 veces lo apostado.</p>
-            <p>🎲 <strong>Triples:</strong> Acierta 3 números y gana 700 veces.</p>
-            <p>⭐ <strong>Más 1:</strong> Combina número y animal para ganar 250 veces.</p>
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">ⓘ ¿Cómo jugar ZooloCASINO?</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 p-2">
+
+            <div className="bg-emerald-800 rounded-xl p-4">
+              <h3 className="text-yellow-400 font-bold text-lg mb-2">🐯 Animalitos (42 animales)</h3>
+              <p className="text-emerald-100 text-sm">
+                Selecciona un animalito de los 42 disponibles. Si aciertas el ganador,{' '}
+                <strong className="text-yellow-400">pagamos 35 veces</strong> lo apostado.
+              </p>
+              <p className="text-emerald-100 text-sm mt-2">
+                🦉 <strong className="text-yellow-400">El 40 (Lechuza) paga el doble:</strong> 70 veces lo apostado.
+              </p>
+            </div>
+
+            <div className="bg-emerald-800 rounded-xl p-4">
+              <h3 className="text-yellow-400 font-bold text-lg mb-2">🎲 Triple</h3>
+              <p className="text-emerald-100 text-sm">
+                Acierta 3 números y gana <strong className="text-yellow-400">700 veces</strong> lo apostado.
+              </p>
+              <p className="text-emerald-100 text-sm mt-2">
+                📍 <strong>Aproximado:</strong> Si juegas el 500 y sale el 499 o 501, se paga{' '}
+                <strong className="text-yellow-400">20 veces</strong> lo apostado.
+              </p>
+            </div>
+
+            <div className="bg-emerald-800 rounded-xl p-4">
+              <h3 className="text-yellow-400 font-bold text-lg mb-2">🔢 Terminal</h3>
+              <p className="text-emerald-100 text-sm">
+                Acierta 2 números y gana <strong className="text-yellow-400">65 veces</strong> lo apostado.
+              </p>
+            </div>
+
+            <div className="bg-emerald-800 rounded-xl p-4">
+              <h3 className="text-yellow-400 font-bold text-lg mb-2">⭐ Más 1</h3>
+              <p className="text-emerald-100 text-sm">
+                Selecciona un número del 0 al 9 más un animalito. Si aciertas ambos, gana{' '}
+                <strong className="text-yellow-400">250 veces</strong> lo apostado.
+              </p>
+              <p className="text-emerald-100 text-sm mt-2">
+                💰 Apuesta mínima: <strong className="text-yellow-400">$5</strong>
+              </p>
+              <p className="text-emerald-100 text-sm mt-2">
+                🐯 Si solo aciertas el animal: ganas <strong className="text-yellow-400">35 veces</strong> (igual que ZooloCASINO). Nota: el 40 no tiene valor doble aquí.
+              </p>
+            </div>
+
           </div>
         </DialogContent>
       </Dialog>
+
     </div>
   );
 }
