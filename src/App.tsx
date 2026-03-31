@@ -42,7 +42,7 @@ import {
 } from 'lucide-react';
 import './App.css';
 
-// URL de tu nueva API en Render (Asegúrate de que el servicio se llame así)
+// URL de tu API en Render
 const API_URL = "https://zoolocasino-api.onrender.com";
 
 // ─────────────────────────────────────────────
@@ -80,9 +80,13 @@ function InlineCalendar({ selectedDate, onSelectDate, onClose }: InlineCalendarP
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
       <div className="bg-emerald-900 border border-emerald-700 rounded-2xl shadow-2xl p-4 w-full max-w-xs" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-3">
-          <button onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))} className="p-2 hover:bg-emerald-800 rounded-lg transition-transform active:scale-95"><ChevronLeft className="w-5 h-5" /></button>
+          <button onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))} className="p-2 hover:bg-emerald-800 rounded-lg active:scale-95 transition-transform">
+            <ChevronLeft className="w-5 h-5" />
+          </button>
           <span className="font-bold text-sm">{MONTHS[month.getMonth()]} {month.getFullYear()}</span>
-          <button onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))} className="p-2 hover:bg-emerald-800 rounded-lg transition-transform active:scale-95"><ChevronRight className="w-5 h-5" /></button>
+          <button onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))} className="p-2 hover:bg-emerald-800 rounded-lg active:scale-95 transition-transform">
+            <ChevronRight className="w-5 h-5" />
+          </button>
         </div>
         <div className="grid grid-cols-7 gap-1 text-center mb-1">
           {DAYS_HEADER.map((d) => (<div key={d} className="text-emerald-400 text-xs py-1 font-medium">{d}</div>))}
@@ -139,38 +143,22 @@ function AdminPanelContent({ activeAdminTab, getDayState, updateVenezuela, updat
 
   const handleSave = async () => {
     const dateStr = adminSelectedDate.toISOString().split('T');
-    
-    // --- NUEVO: GUARDAR EN LA API ---
     try {
       await fetch(`${API_URL}/api/results`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          date: dateStr,
-          game_type: activeAdminTab,
-          data: localResults
-        })
+        body: JSON.stringify({ date: dateStr, game_type: activeAdminTab, data: localResults })
       });
-    } catch (err) {
-      console.error("Error guardando en la nube:", err);
-    }
+    } catch (err) { console.error("Error nube:", err); }
 
     if (activeAdminTab === 'venezuela') {
-      adminDayState.venezuela.forEach((s: any) => {
-        if (localResults[s.id] !== undefined) updateVenezuela(adminSelectedDate, s.id, localResults[s.id]);
-      });
+      adminDayState.venezuela.forEach((s: any) => { if (localResults[s.id] !== undefined) updateVenezuela(adminSelectedDate, s.id, localResults[s.id]); });
     } else if (activeAdminTab === 'peru') {
-      adminDayState.peru.forEach((s: any) => {
-        if (localResults[s.id] !== undefined) updatePeru(adminSelectedDate, s.id, localResults[s.id]);
-      });
+      adminDayState.peru.forEach((s: any) => { if (localResults[s.id] !== undefined) updatePeru(adminSelectedDate, s.id, localResults[s.id]); });
     } else if (activeAdminTab === 'triples') {
-      adminDayState.triples.forEach((s: any) => {
-        updateTriple(adminSelectedDate, s.id, localResults[`${s.id}_r1`] || '', localResults[`${s.id}_r2`] || '', localResults[`${s.id}_r3`] || '');
-      });
+      adminDayState.triples.forEach((s: any) => { updateTriple(adminSelectedDate, s.id, localResults[`${s.id}_r1`] || '', localResults[`${s.id}_r2`] || '', localResults[`${s.id}_r3`] || ''); });
     } else if (activeAdminTab === 'terminales') {
-      adminDayState.terminales.forEach((s: any) => {
-        updateTerminal(adminSelectedDate, s.id, localResults[`${s.id}_r1`] || '', localResults[`${s.id}_r2`] || '');
-      });
+      adminDayState.terminales.forEach((s: any) => { updateTerminal(adminSelectedDate, s.id, localResults[`${s.id}_r1`] || '', localResults[`${s.id}_r2`] || ''); });
     } else if (activeAdminTab === 'mas1') {
       updateMas1(adminSelectedDate, localResults['mas1_numero'] || '', localResults['mas1_animal'] || '');
     }
@@ -261,7 +249,7 @@ function AdminPanelContent({ activeAdminTab, getDayState, updateVenezuela, updat
           </div>
         )}
         <Button onClick={handleSave} className="w-full mt-4 bg-yellow-500 hover:bg-yellow-600 text-black font-bold">
-          <Save className="w-4 h-4 mr-2" />Guardar Todos los Cambios
+          <Save className="w-4 h-4 mr-2" />Guardar Cambios
         </Button>
       </div>
     </>
@@ -291,16 +279,11 @@ function App() {
   const [resultadosDropdownOpen, setResultadosDropdownOpen] = useState(false);
   const [adminSelectedDate, setAdminSelectedDate] = useState(new Date());
 
-  const {
-    getDayState, venezuelaTime, peruTime, isAuthenticated, isPast, isNext, login, logout, checkAuth,
-    updateVenezuela, updatePeru, updateTriple, updateTerminal, updateMas1,
-    clearVenezuela, clearPeru, clearTriple, clearTerminal, clearMas1
-  } = useZooloState();
+  const { getDayState, venezuelaTime, peruTime, isAuthenticated, isPast, isNext, login, logout, checkAuth, updateVenezuela, updatePeru, updateTriple, updateTerminal, updateMas1, clearVenezuela, clearPeru, clearTriple, clearTerminal, clearMas1 } = useZooloState();
 
   const dayState = getDayState(selectedDate);
-  const { venezuela: venezuelaResults, peru: peruResults, triples: triplesResults, terminales: terminalesResults, mas1: mas1Result } = dayState;
+  const { venezuela: vRes, peru: pRes, triples: tRes, terminales: termRes, mas1: mRes } = dayState;
 
-  // --- NUEVO: CARGAR DATOS DE LA NUBE ---
   useEffect(() => {
     const syncData = async () => {
       const dateStr = selectedDate.toISOString().split('T');
@@ -308,13 +291,10 @@ function App() {
         const response = await fetch(`${API_URL}/api/results/${dateStr}`);
         const cloudData = await response.json();
         cloudData.forEach((entry: any) => {
-          if (entry.game_type === 'venezuela') {
-            Object.keys(entry.data).forEach(id => updateVenezuela(selectedDate, id, entry.data[id]));
-          } else if (entry.game_type === 'peru') {
-            Object.keys(entry.data).forEach(id => updatePeru(selectedDate, id, entry.data[id]));
-          }
+          if (entry.game_type === 'venezuela') Object.keys(entry.data).forEach(id => updateVenezuela(selectedDate, id, entry.data[id]));
+          if (entry.game_type === 'peru') Object.keys(entry.data).forEach(id => updatePeru(selectedDate, id, entry.data[id]));
         });
-      } catch (err) { console.error("Error sincronizando:", err); }
+      } catch (err) { console.error("Sync error:", err); }
     };
     syncData();
   }, [selectedDate, updateVenezuela, updatePeru]);
@@ -327,10 +307,7 @@ function App() {
     return () => document.removeEventListener('click', handleClick);
   }, [sorteosDropdownOpen, resultadosDropdownOpen]);
 
-  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
-    setToast({ message, type }); setTimeout(() => setToast(null), 3000);
-  };
-
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => { setToast({ message, type }); setTimeout(() => setToast(null), 3000); };
   const formatDate = (date: Date) => {
     const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
     const months = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
@@ -340,246 +317,203 @@ function App() {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault(); setLoginError('');
     if (login(loginForm.username, loginForm.password)) {
-      setLoginOpen(false); setAdminOpen(true); setLoginForm({ username: '', password: '' }); showToast('Bienvenido, administrador');
-    } else { setLoginError('Usuario o contraseña incorrectos'); }
+      setLoginOpen(false); setAdminOpen(true); setLoginForm({ username: '', password: '' }); showToast('Bienvenido');
+    } else { setLoginError('Error'); }
   };
 
-  const getCurrentTime = () => selectedGame === 'peru' ? peruTime : venezuelaTime;
-  const getSorteos = () => selectedGame === 'peru' ? peruResults : venezuelaResults;
+  const getSorteos = () => selectedGame === 'peru' ? pRes : vRes;
 
   const getAnimalDelMomento = useCallback(() => {
-    const sorteos = getSorteos();
-    for (let i = sorteos.length - 1; i >= 0; i--) {
-      if (sorteos[i].result) return { sorteo: sorteos[i], animal: getAnimal(sorteos[i].result) };
-    }
-    for (const s of sorteos) {
-      if (!isPast(s.time, selectedGame === 'peru' ? 'peru' : 'venezuela')) return { sorteo: s, animal: null };
-    }
-    return { sorteo: sorteos, animal: null };
-  }, [selectedGame, venezuelaResults, peruResults, isPast]);
+    const s = getSorteos();
+    for (let i = s.length - 1; i >= 0; i--) if (s[i].result) return { sorteo: s[i], animal: getAnimal(s[i].result) };
+    return { sorteo: s, animal: null };
+  }, [selectedGame, vRes, pRes]);
 
-  const filteredAnimals = ANIMALS.filter(animal => {
-    if (animalFilter !== 'todos' && animal.color !== animalFilter.slice(0, -1)) return false;
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      return animal.name.toLowerCase().includes(query) || animal.num.includes(query);
-    }
+  const filteredAnimals = ANIMALS.filter(a => {
+    if (animalFilter !== 'todos' && a.color !== animalFilter.slice(0, -1)) return false;
+    if (searchQuery) return a.name.toLowerCase().includes(searchQuery.toLowerCase()) || a.num.includes(searchQuery);
     return true;
   });
 
-  const getNextDrawCountdown = () => {
-    const sorteos = getSorteos(); const currentTime = getCurrentTime();
-    for (const s of sorteos) {
-      const [h, m] = s.time.split(':').map(Number); const drawTime = new Date(currentTime);
-      drawTime.setHours(h, m, 0, 0);
-      if (drawTime > currentTime) {
-        const diff = drawTime.getTime() - currentTime.getTime();
-        return { hours: Math.floor(diff / 3600000), minutes: Math.floor((diff % 3600000) / 60000), seconds: Math.floor((diff % 60000) / 1000), time: s.time };
-      }
-    }
-    return null;
+  const getAnimalImagePath = (a: Animal, c: 'venezuela' | 'peru') => {
+    const n = a.name.toLowerCase().replace(/[áéíóúñü]/g, x => ({'á':'a','é':'e','í':'i','ó':'o','ú':'u','ñ':'n','ü':'u'}[x]||x));
+    return c === 'peru' ? `/animals/peru/${a.num}-${n}.jpg` : `/animals/${a.num}-${n}.jpg`;
   };
 
-  const getBorderColorClass = (color: string) => {
-    switch (color) { case 'rojo': return 'border-red-500'; case 'verde': return 'border-green-500'; case 'negro': return 'border-gray-800'; default: return 'border-emerald-500'; }
-  };
-
-  const getAnimalImagePath = (animal: Animal, country: 'venezuela' | 'peru') => {
-    const nameToFile = (name: string) => name.toLowerCase().replace(/[áéíóúñü]/g, c => ({'á':'a','é':'e','í':'i','ó':'o','ú':'u','ñ':'n','ü':'u'}[c]||c));
-    if (country === 'peru') return `/animals/peru/${animal.num}-${nameToFile(animal.name)}.jpg`;
-    return `/animals/${animal.num}-${nameToFile(animal.name)}.jpg`;
-  };
-
-  const renderAnimalitoCard = (sorteo: { id: string; time: string; result: string }) => {
-    const done = sorteo.result && sorteo.result.trim() !== '';
-    const next = isNext(sorteo.time, selectedGame === 'peru' ? 'peru' : 'venezuela');
-    const animal = done ? getAnimal(sorteo.result) : null;
-    const borderClass = animal ? getBorderColorClass(animal.color) : 'border-emerald-500';
+  const renderAnimalitoCard = (s: any) => {
+    const done = s.result && s.result.trim() !== '';
+    const next = isNext(s.time, selectedGame === 'peru' ? 'peru' : 'venezuela');
+    const animal = done ? getAnimal(s.result) : null;
     const country = selectedGame === 'peru' ? 'peru' : 'venezuela';
-    if (done && animal) {
-      return (
-        <div key={sorteo.id} className="sorteo-card finalizado">
-          <div className="flex items-center justify-between mb-2">
-            <div className="sorteo-time"><Clock className="w-4 h-4" />{formatTimeDisplay(sorteo.time)}</div>
-            <span className="text-2xl">{country === 'peru' ? '🇵🇪' : '🇻🇪'}</span>
-          </div>
-          <img src={getAnimalImagePath(animal, country)} className={`sorteo-animal-img-large border-4 ${borderClass}`} onError={(e) => { (e.target as HTMLImageElement).src = '/animals/0-delfin.jpg'; }} />
-          <div className="sorteo-animal-name">{animal.name}</div><div className="sorteo-animal-num">N° {sorteo.result}</div>
-          <Badge className="sorteo-badge finalizado">Finalizado</Badge>
-        </div>
-      );
-    }
-    if (next) {
-      return (
-        <div key={sorteo.id} className="sorteo-card en-vivo">
-          <div className="flex items-center justify-between mb-2">
-            <div className="sorteo-time"><Clock className="w-4 h-4" />{formatTimeDisplay(sorteo.time)}</div>
-            <span className="text-2xl">{country === 'peru' ? '🇵🇪' : '🇻🇪'}</span>
-          </div>
-          <div className="sorteo-placeholder"><div className="live-indicator"></div></div>
-          <div className="sorteo-animal-name">En Vivo</div><div className="sorteo-animal-num">Sorteando...</div>
-          <Badge className="sorteo-badge en-vivo">En Vivo</Badge>
-        </div>
-      );
-    }
     return (
-      <div key={sorteo.id} className="sorteo-card pendiente">
+      <div key={s.id} className={`sorteo-card ${done ? 'finalizado' : next ? 'en-vivo' : 'pendiente'}`}>
         <div className="flex items-center justify-between mb-2">
-          <div className="sorteo-time"><Clock className="w-4 h-4" />{formatTimeDisplay(sorteo.time)}</div>
-          <span className="text-2xl">{country === 'peru' ? '🇵🇪' : '🇻🇪'}</span>
+          <div className="sorteo-time"><Clock className="w-4 h-4" />{formatTimeDisplay(s.time)}</div>
+          <span>{country === 'peru' ? '🇵🇪' : '🇻🇪'}</span>
         </div>
-        <div className="sorteo-placeholder"><Clock className="w-8 h-8 text-emerald-400/50" /></div>
-        <div className="sorteo-animal-name">Pendiente</div><Badge className="sorteo-badge pendiente">Pendiente</Badge>
-      </div>
-    );
-  };
-
-  const renderTripleCard = (sorteo: { id: string; time: string; r1: string; r2: string; r3: string }) => {
-    const done = sorteo.r1 && sorteo.r2 && sorteo.r3;
-    return (
-      <div key={sorteo.id} className={`sorteo-card ${done ? 'finalizado' : 'pendiente'}`}>
-        <div className="sorteo-time"><Dice3 className="w-4 h-4" />{formatTimeDisplay(sorteo.time)}</div>
-        <div className="flex justify-center gap-2 my-3">
-          {[sorteo.r1, sorteo.r2, sorteo.r3].map((val, i) => (<div key={i} className="w-12 h-12 rounded-lg border-2 flex items-center justify-center font-bold">{val || '?'}</div>))}
-        </div>
-        <div className="sorteo-animal-name">Triple</div><Badge className={`sorteo-badge ${done ? 'finalizado' : 'pendiente'}`}>{done ? 'Finalizado' : 'Pendiente'}</Badge>
-      </div>
-    );
-  };
-
-  const renderTerminalCard = (sorteo: { id: string; time: string; r1: string; r2: string }) => {
-    const done = sorteo.r1 && sorteo.r2;
-    return (
-      <div key={sorteo.id} className={`sorteo-card ${done ? 'finalizado' : 'pendiente'}`}>
-        <div className="sorteo-time"><Hash className="w-4 h-4" />{formatTimeDisplay(sorteo.time)}</div>
-        <div className="flex justify-center gap-2 my-3">
-          {[sorteo.r1, sorteo.r2].map((val, i) => (<div key={i} className="w-12 h-12 rounded-lg border-2 flex items-center justify-center font-bold">{val || '?'}</div>))}
-        </div>
-        <div className="sorteo-animal-name">Terminal</div><Badge className={`sorteo-badge ${done ? 'finalizado' : 'pendiente'}`}>{done ? 'Finalizado' : 'Pendiente'}</Badge>
-      </div>
-    );
-  };
-
-  const renderMas1 = () => {
-    const done = mas1Result.numero && mas1Result.animal_num;
-    const animal = done ? getAnimal(mas1Result.animal_num) : null;
-    return (
-      <Card className="bg-emerald-800/50 border-emerald-700 p-6 text-center max-w-md mx-auto">
-        <h3 className="text-yellow-400 text-xl mb-4 flex items-center justify-center gap-2"><Plus className="w-5 h-5" />Más 1 ZooloCASINO</h3>
         {done && animal ? (
           <>
-            <div className="flex items-center justify-center gap-4 mb-4"><div className="w-16 h-16 rounded-xl bg-yellow-500 flex items-center justify-center text-3xl font-bold text-black">{mas1Result.numero}</div><span className="text-2xl text-yellow-400">+</span><img src={animal.image} className="w-16 h-16 rounded-xl object-cover" /></div>
-            <Badge className="text-lg px-4 py-1">{mas1Result.animal_num} - {animal.name}</Badge>
+            <img src={getAnimalImagePath(animal, country)} className={`sorteo-animal-img-large border-4 ${animal.color === 'rojo' ? 'border-red-500' : animal.color === 'verde' ? 'border-green-500' : 'border-gray-800'}`} onError={(e) => { (e.target as HTMLImageElement).src = '/animals/0-delfin.jpg'; }} />
+            <div className="sorteo-animal-name">{animal.name}</div><div className="sorteo-animal-num">N° {s.result}</div>
           </>
-        ) : ( <div className="py-8"><div className="text-5xl mb-4">📅</div><div className="text-emerald-300">Esperando resultado</div></div> )}
-      </Card>
+        ) : (
+          <div className="sorteo-placeholder">{next ? <div className="live-indicator" /> : <Clock className="w-8 h-8 opacity-50" />}</div>
+        )}
+        <Badge className={`sorteo-badge ${done ? 'finalizado' : next ? 'en-vivo' : 'pendiente'}`}>{done ? 'Finalizado' : next ? 'En Vivo' : 'Pendiente'}</Badge>
+      </div>
     );
   };
 
-  const { sorteo: animalDelMomento, animal: animalMomentoData } = getAnimalDelMomento();
-  const countdown = getNextDrawCountdown();
+  const { sorteo: adM, animal: aMD } = getAnimalDelMomento();
 
   return (
     <div className="min-h-screen bg-emerald-900 text-white">
-      {datePickerOpen && ( <InlineCalendar selectedDate={selectedDate} onSelectDate={setSelectedDate} onClose={() => setDatePickerOpen(false)} /> )}
-      {toast && ( <div className={`fixed bottom-4 right-4 px-6 py-3 rounded-lg z-50 ${toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'}`}>{toast.message}</div> )}
+      {datePickerOpen && <InlineCalendar selectedDate={selectedDate} onSelectDate={setSelectedDate} onClose={() => setDatePickerOpen(false)} />}
+      {toast && <div className={`fixed bottom-4 right-4 px-6 py-3 rounded-lg z-50 ${toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'}`}>{toast.message}</div>}
 
       <Dialog open={loginOpen} onOpenChange={setLoginOpen}>
         <DialogContent className="bg-emerald-900 border-emerald-700 text-white">
-          <DialogHeader><DialogTitle className="flex items-center gap-2 justify-center">Acceso Administrador</DialogTitle></DialogHeader>
-          <form onSubmit={handleLogin} className="space-y-4 mt-4">
-            <Input type="text" value={loginForm.username} onChange={(e) => setLoginForm({ ...loginForm, username: e.target.value })} placeholder="Usuario" className="bg-emerald-800 border-emerald-600 text-white" />
-            <Input type="password" value={loginForm.password} onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })} placeholder="Contraseña" className="bg-emerald-800 border-emerald-600 text-white" />
-            {loginError && <div className="text-red-400 text-sm">{loginError}</div>}
-            <Button type="submit" className="w-full bg-yellow-500 text-black font-bold">Iniciar Sesión</Button>
+          <DialogHeader><DialogTitle>Admin</DialogTitle></DialogHeader>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <Input value={loginForm.username} onChange={e => setLoginForm({...loginForm, username: e.target.value})} placeholder="User" className="bg-emerald-800" />
+            <Input type="password" value={loginForm.password} onChange={e => setLoginForm({...loginForm, password: e.target.value})} placeholder="Pass" className="bg-emerald-800" />
+            <Button type="submit" className="w-full bg-yellow-500 text-black">Login</Button>
           </form>
         </DialogContent>
       </Dialog>
 
       <Dialog open={adminOpen} onOpenChange={setAdminOpen}>
-        <DialogContent className="bg-emerald-900 border-emerald-700 text-white max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center justify-between">
-              <span>Panel de Administración</span>
-              <Button onClick={() => { logout(); setAdminOpen(false); showToast('Sesión cerrada'); }} className="border-emerald-600 text-emerald-300">Cerrar Sesión</Button>
-            </DialogTitle>
-          </DialogHeader>
-          <div className="flex gap-2 mb-4 flex-wrap">
-            {['venezuela', 'peru', 'triples', 'terminales', 'mas1'].map((tab) => (
-              <Button key={tab} size="sm" onClick={() => setActiveAdminTab(tab as any)} variant={activeAdminTab === tab ? 'default' : 'outline'}>{tab}</Button>
+        <DialogContent className="bg-emerald-900 border-emerald-700 text-white max-w-4xl">
+          <DialogHeader><DialogTitle className="flex justify-between"><span>Admin</span><Button onClick={() => { logout(); setAdminOpen(false); }}><LogOut /></Button></DialogTitle></DialogHeader>
+          <div className="flex gap-2 flex-wrap mb-4">
+            {['venezuela', 'peru', 'triples', 'terminales', 'mas1'].map(t => (
+              <Button key={t} size="sm" onClick={() => setActiveAdminTab(t as any)} variant={activeAdminTab === t ? 'default' : 'outline'}>{t}</Button>
             ))}
           </div>
           <AdminPanelContent activeAdminTab={activeAdminTab} getDayState={getDayState} updateVenezuela={updateVenezuela} updatePeru={updatePeru} updateTriple={updateTriple} updateTerminal={updateTerminal} updateMas1={updateMas1} clearVenezuela={clearVenezuela} clearPeru={clearPeru} clearTriple={clearTriple} clearTerminal={clearTerminal} clearMas1={clearMas1} showToast={showToast} adminSelectedDate={adminSelectedDate} setAdminSelectedDate={setAdminSelectedDate} />
         </DialogContent>
       </Dialog>
 
-      <nav className="sticky top-0 z-40 bg-emerald-900/95 backdrop-blur-sm border-b border-emerald-800 h-16 flex items-center justify-between px-4">
-        <div className="flex items-center gap-2"><img src="/logo.jpg" className="w-10 h-10 rounded-full" /><div><div className="font-bold text-lg">Zoolo</div><div className="text-yellow-400 text-xs">CASINO</div></div></div>
+      <nav className="sticky top-0 z-40 bg-emerald-900/95 border-b border-emerald-800 h-16 flex items-center justify-between px-4">
+        <div className="flex items-center gap-2"><img src="/logo.jpg" className="w-10 h-10 rounded-full" /><div><div className="font-bold">Zoolo</div><div className="text-yellow-400 text-xs">CASINO</div></div></div>
         <div className="hidden md:flex gap-1">
           <button onClick={() => setActiveSection('inicio')} className="px-4 py-2 hover:bg-emerald-800 rounded-lg">Inicio</button>
           <button onClick={() => setActiveSection('resultados')} className="px-4 py-2 hover:bg-emerald-800 rounded-lg">Resultados</button>
           <button onClick={() => setActiveSection('animales')} className="px-4 py-2 hover:bg-emerald-800 rounded-lg">Animales</button>
+          <button onClick={() => setActiveSection('horarios')} className="px-4 py-2 hover:bg-emerald-800 rounded-lg">Horarios</button>
+          <button onClick={() => setActiveSection('preguntas')} className="px-4 py-2 hover:bg-emerald-800 rounded-lg">Preguntas</button>
+          <button onClick={() => setActiveSection('contacto')} className="px-4 py-2 hover:bg-emerald-800 rounded-lg">Contacto</button>
         </div>
-        <button onClick={() => isAuthenticated ? setAdminOpen(true) : setLoginOpen(true)} className="bg-yellow-500/20 text-yellow-400 px-3 py-2 rounded-lg">Admin</button>
+        <button onClick={() => isAuthenticated ? setAdminOpen(true) : setLoginOpen(true)} className="bg-yellow-500/20 text-yellow-400 px-3 py-2 rounded-lg"><Lock className="w-4 h-4" /></button>
+        <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden"><Menu /></button>
       </nav>
+
+      {menuOpen && (
+        <div className="fixed inset-0 z-40 bg-emerald-900 pt-20 p-4 flex flex-col gap-2">
+          <button onClick={() => { setActiveSection('inicio'); setMenuOpen(false); }}>Inicio</button>
+          <button onClick={() => { setActiveSection('resultados'); setMenuOpen(false); }}>Resultados</button>
+          <button onClick={() => { setActiveSection('animales'); setMenuOpen(false); }}>Animales</button>
+          <button onClick={() => { setActiveSection('horarios'); setMenuOpen(false); }}>Horarios</button>
+          <button onClick={() => { setActiveSection('preguntas'); setMenuOpen(false); }}>Preguntas</button>
+          <button onClick={() => { setActiveSection('contacto'); setMenuOpen(false); }}>Contacto</button>
+        </div>
+      )}
 
       <main className="max-w-7xl mx-auto px-4 py-6">
         {activeSection === 'inicio' && (
-          <div className="space-y-8">
-            <h1 className="text-4xl md:text-6xl font-black text-center">La mejor lotería de <span className="text-yellow-400">animales</span></h1>
+          <div className="space-y-8 text-center">
+            <h1 className="text-4xl md:text-6xl font-black">La mejor lotería de <span className="text-yellow-400">animales</span></h1>
             <div className="grid grid-cols-3 gap-4">
-              <Card className="bg-emerald-800/50 p-4 text-center">42 Animales</Card><Card className="bg-emerald-800/50 p-4 text-center">12 Sorteos/Día</Card><Card className="bg-emerald-800/50 p-4 text-center">100% Confiable</Card>
+              <Card className="p-4 bg-emerald-800/50">42 Animales</Card>
+              <Card className="p-4 bg-emerald-800/50">12 Sorteos</Card>
+              <Card className="p-4 bg-emerald-800/50">Confiable</Card>
             </div>
-            <Card className="bg-emerald-800/50 border-emerald-700 p-6 text-center max-w-md mx-auto">
-              <h3 className="text-yellow-400 mb-4">Animal del Momento</h3>
-              {animalMomentoData ? (
-                <>
-                  <img src={getAnimalImagePath(animalMomentoData, selectedGame === 'peru' ? 'peru' : 'venezuela')} className="w-32 h-32 rounded-xl mx-auto mb-4 object-cover" />
-                  <Badge className="text-lg mb-2">{animalDelMomento.result}</Badge>
-                  <div className="text-xl font-bold">{animalMomentoData.name}</div>
-                </>
-              ) : ( <div className="text-xl font-bold">Esperando sorteo</div> )}
+            <Card className="p-6 bg-emerald-800/50 max-w-md mx-auto">
+              <h3 className="text-yellow-400 mb-4">Momento</h3>
+              {aMD ? (<><img src={getAnimalImagePath(aMD, selectedGame === 'peru' ? 'peru' : 'venezuela')} className="w-32 h-32 rounded-xl mx-auto mb-2" /><div className="text-xl font-bold">{aMD.name}</div></>) : "Esperando"}
             </Card>
+            <Button onClick={() => setShowRules(true)} className="bg-yellow-500 text-black font-bold px-8 py-4">¿Cómo jugar?</Button>
           </div>
         )}
 
         {activeSection === 'resultados' && (
           <div className="space-y-6">
-            <div className="flex flex-wrap justify-center gap-2">
+            <div className="flex justify-center gap-2 flex-wrap">
               {['venezuela', 'peru', 'triples', 'terminales', 'mas1'].map(g => (
                 <button key={g} onClick={() => setSelectedGame(g as any)} className={`px-4 py-2 rounded-lg ${selectedGame === g ? 'bg-yellow-500 text-black' : 'bg-emerald-800 text-white'}`}>{g}</button>
               ))}
             </div>
-            <div className="flex items-center justify-center gap-4 mb-6">
+            <div className="flex items-center justify-center gap-4">
               <button onClick={() => setSelectedDate(new Date(selectedDate.getTime() - 86400000))} className="p-2 bg-emerald-800 rounded-lg"><ChevronLeft /></button>
               <button onClick={() => setDatePickerOpen(true)} className="bg-emerald-800 px-4 py-2 rounded-lg">{formatDate(selectedDate)}</button>
               <button onClick={() => setSelectedDate(new Date(selectedDate.getTime() + 86400000))} className="p-2 bg-emerald-800 rounded-lg"><ChevronRight /></button>
             </div>
-            <div className="min-h-[600px]">
-              {(selectedGame === 'venezuela' || selectedGame === 'peru') && <div className="grid grid-cols-2 gap-3">{getSorteos().map((s:any) => renderAnimalitoCard(s))}</div>}
-              {selectedGame === 'triples' && <div className="grid grid-cols-1 md:grid-cols-3 gap-3">{triplesResults.map((s:any) => renderTripleCard(s))}</div>}
-              {selectedGame === 'terminales' && <div className="grid grid-cols-1 md:grid-cols-3 gap-3">{terminalesResults.map((s:any) => renderTerminalCard(s))}</div>}
-              {selectedGame === 'mas1' && renderMas1()}
+            <div className="grid grid-cols-2 gap-3">
+              {(selectedGame === 'venezuela' || selectedGame === 'peru') && getSorteos().map(s => renderAnimalitoCard(s))}
+              {selectedGame === 'triples' && tRes.map((s:any) => <div key={s.id} className="sorteo-card bg-emerald-800/50 p-4 text-center">{s.r1}-{s.r2}-{s.r3}</div>)}
+              {selectedGame === 'terminales' && termRes.map((s:any) => <div key={s.id} className="sorteo-card bg-emerald-800/50 p-4 text-center">{s.r1}-{s.r2}</div>)}
+              {selectedGame === 'mas1' && <div className="p-6 bg-emerald-800/50 text-center">{mRes.numero} + {mRes.animal_num}</div>}
             </div>
           </div>
         )}
 
         {activeSection === 'animales' && (
           <div className="space-y-6">
-            <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500" /><Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Buscar..." className="pl-10 bg-emerald-800 border-emerald-700 text-white" /></div>
+            <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500" /><Input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Buscar..." className="pl-10 bg-emerald-800 border-emerald-700 text-white" /></div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {filteredAnimals.map(animal => (
-                <div key={animal.num} className="bg-emerald-800/50 border border-emerald-700 rounded-xl p-3 flex flex-col items-center gap-2">
-                  <img src={animal.image} className="w-20 h-20 rounded-lg object-cover" />
-                  <Badge>{animal.num}</Badge><div className="font-medium text-sm">{animal.name}</div>
+              {filteredAnimals.map(a => (
+                <div key={a.num} className="bg-emerald-800/50 border border-emerald-700 rounded-xl p-3 flex flex-col items-center gap-2">
+                  <img src={a.image} className="w-20 h-20 rounded-lg object-cover" />
+                  <Badge className={a.color === 'rojo' ? 'bg-red-500' : a.color === 'verde' ? 'bg-green-500' : 'bg-gray-700'}>{a.num}</Badge>
+                  <div className="font-medium text-sm">{a.name}</div>
                 </div>
               ))}
             </div>
           </div>
         )}
+
+        {activeSection === 'horarios' && (
+          <div className="space-y-6 text-center">
+            <h2 className="text-2xl font-bold">Horarios</h2>
+            <div className="grid grid-cols-2 gap-3">
+              {(selectedGame === 'peru' ? PERU_TIMES : VENEZUELA_TIMES).map(t => (
+                <div key={t} className="p-3 bg-emerald-800/50 rounded-lg">{formatTimeDisplay(t)}</div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {activeSection === 'preguntas' && (
+          <div className="space-y-4">
+            <h2 className="text-2xl font-bold text-center">FAQ</h2>
+            <div className="bg-emerald-800/50 p-4 rounded-xl">¿Qué es ZooloCASINO? Resultados en tiempo real.</div>
+            <div className="bg-emerald-800/50 p-4 rounded-xl">¿Cuánto paga? 35 veces.</div>
+          </div>
+        )}
+
+        {activeSection === 'contacto' && (
+          <div className="max-w-md mx-auto text-center space-y-4">
+            <Card className="p-8 bg-emerald-800/50 border-emerald-700">
+              <Mail className="w-12 h-12 mx-auto mb-4 text-yellow-400" />
+              <h3 className="font-bold">Email</h3>
+              <a href="mailto:soportezoolo@gmail.com" className="text-yellow-400">soportezoolo@gmail.com</a>
+            </Card>
+          </div>
+        )}
       </main>
 
       <footer className="bg-emerald-950 border-t border-emerald-800 py-8 text-center text-xs text-emerald-500">© 2026 Zoolo CASINO.</footer>
+      
+      <Dialog open={showRules} onOpenChange={setShowRules}>
+        <DialogContent className="bg-emerald-900 border-emerald-700 text-white max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>¿Cómo jugar?</DialogTitle></DialogHeader>
+          <div className="space-y-4 p-4">
+            <p>Acierta un animal y gana 35 veces lo apostado.</p>
+            <p>Triples pagan 700 veces.</p>
+            <p>Más 1 paga 250 veces.</p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
