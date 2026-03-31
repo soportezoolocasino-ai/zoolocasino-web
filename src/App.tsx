@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useZooloState } from '@/hooks/useZooloState';
 import { ANIMALS, getAnimal, A_NAMES, TT_NAMES, formatTimeDisplay, VENEZUELA_TIMES, PERU_TIMES, type Animal } from '@/data/animals';
 import { Button } from '@/components/ui/button';
@@ -29,7 +29,7 @@ import './App.css';
 const API_URL = "https://zoolocasino-api.onrender.com";
 
 // ─────────────────────────────────────────────
-// COMPONENTE CALENDARIO INLINE
+// COMPONENTE CALENDARIO INLINE - CORREGIDO PARA MÓVIL ANDROID
 // ─────────────────────────────────────────────
 interface InlineCalendarProps {
   selectedDate: Date;
@@ -41,6 +41,15 @@ function InlineCalendar({ selectedDate, onSelectDate, onClose }: InlineCalendarP
   const [month, setMonth] = useState(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1));
   const MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   const DAYS_HEADER = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+
+  // FIX MÓVIL: Bloquear scroll del body cuando el calendario está abierto
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, []);
 
   const generateDays = () => {
     const year = month.getFullYear();
@@ -59,30 +68,75 @@ function InlineCalendar({ selectedDate, onSelectDate, onClose }: InlineCalendarP
     month.getMonth() === selectedDate.getMonth() &&
     month.getFullYear() === selectedDate.getFullYear();
 
+  // FIX MÓVIL: Usar position fixed con height calculado para Android Chrome
+  // evita el bug de la barra de navegación inferior
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
-      <div className="bg-emerald-900 border border-emerald-700 rounded-2xl shadow-2xl p-4 w-full max-w-xs" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="fixed z-50 flex items-center justify-center bg-black/60 p-4"
+      style={{ top: 0, left: 0, right: 0, bottom: 0, height: '100dvh' }}
+      onTouchStart={(e) => e.stopPropagation()}
+      onClick={onClose}
+    >
+      <div
+        className="bg-emerald-900 border border-emerald-700 rounded-2xl shadow-2xl p-4 w-full max-w-xs"
+        onClick={(e) => e.stopPropagation()}
+        onTouchStart={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between mb-3">
-          <button onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))} className="p-2 hover:bg-emerald-800 rounded-lg active:scale-95 transition-transform">
+          <button
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1));
+            }}
+            className="p-2 hover:bg-emerald-800 rounded-lg active:scale-95 transition-transform"
+          >
             <ChevronLeft className="w-5 h-5" />
           </button>
           <span className="font-bold text-sm">{MONTHS[month.getMonth()]} {month.getFullYear()}</span>
-          <button onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))} className="p-2 hover:bg-emerald-800 rounded-lg active:scale-95 transition-transform">
+          <button
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1));
+            }}
+            className="p-2 hover:bg-emerald-800 rounded-lg active:scale-95 transition-transform"
+          >
             <ChevronRight className="w-5 h-5" />
           </button>
         </div>
         <div className="grid grid-cols-7 gap-1 text-center mb-1">
-          {DAYS_HEADER.map((d) => (<div key={d} className="text-emerald-400 text-xs py-1 font-medium">{d}</div>))}
+          {DAYS_HEADER.map((d) => (
+            <div key={d} className="text-emerald-400 text-xs py-1 font-medium">{d}</div>
+          ))}
         </div>
         <div className="grid grid-cols-7 gap-1 text-center">
           {generateDays().map((day, i) => (
-            <button key={i} disabled={!day} onClick={() => { if (day) { onSelectDate(new Date(month.getFullYear(), month.getMonth(), day)); onClose(); } }}
-              className={`aspect-square rounded-lg text-sm font-medium transition-all active:scale-95 ${!day ? 'invisible' : ''} ${isSelected(day) ? 'bg-yellow-500 text-black font-bold shadow-lg' : 'hover:bg-emerald-800 text-white'}`}>
+            <button
+              key={i}
+              disabled={!day}
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (day) {
+                  onSelectDate(new Date(month.getFullYear(), month.getMonth(), day));
+                  onClose();
+                }
+              }}
+              className={`aspect-square rounded-lg text-sm font-medium transition-all active:scale-95 
+                ${!day ? 'invisible' : ''} 
+                ${isSelected(day) ? 'bg-yellow-500 text-black font-bold shadow-lg' : 'hover:bg-emerald-800 text-white'}`}
+            >
               {day || ''}
             </button>
           ))}
         </div>
-        <button onClick={onClose} className="mt-3 w-full py-2 text-sm text-emerald-400 hover:text-white hover:bg-emerald-800 rounded-lg transition-colors">Cerrar</button>
+        <button
+          onClick={(e) => { e.stopPropagation(); onClose(); }}
+          className="mt-3 w-full py-2 text-sm text-emerald-400 hover:text-white hover:bg-emerald-800 rounded-lg transition-colors"
+        >
+          Cerrar
+        </button>
       </div>
     </div>
   );
@@ -122,7 +176,7 @@ function AdminPanelContent({ activeAdminTab, getDayState, updateVenezuela, updat
       results['mas1_animal'] = adminDayState.mas1.animal_num;
     }
     setLocalResults(results);
-  }, [activeAdminTab, adminDayState]);
+  }, [activeAdminTab, adminSelectedDate]); // FIX: removido adminDayState para evitar loops
 
   const handleSave = async () => {
     const dateStr = adminSelectedDate.toISOString().split('T')[0];
@@ -284,6 +338,9 @@ function App() {
   const [showRules, setShowRules] = useState(false);
   const [adminSelectedDate, setAdminSelectedDate] = useState(new Date());
 
+  // FIX: Ref para rastrear si ya se hizo sync de una fecha, evitando loops
+  const syncedDates = useRef<Set<string>>(new Set());
+
   const {
     getDayState,
     isAuthenticated,
@@ -305,22 +362,54 @@ function App() {
   const dayState = getDayState(selectedDate);
   const { venezuela: vRes, peru: pRes, triples: tRes, terminales: termRes, mas1: mRes } = dayState;
 
+  // FIX PRINCIPAL: El loop infinito se corregía quitando updateVenezuela/updatePeru
+  // de las dependencias Y usando un ref para no re-sincronizar la misma fecha.
   useEffect(() => {
+    const dateStr = selectedDate.toISOString().split('T')[0];
+
+    // Si ya sincronizamos esta fecha en esta sesión, no volver a hacerlo
+    if (syncedDates.current.has(dateStr)) return;
+
     const syncData = async () => {
-      const dateStr = selectedDate.toISOString().split('T')[0];
       try {
         const response = await fetch(`${API_URL}/api/results/${dateStr}`);
+        if (!response.ok) return;
         const cloudData = await response.json();
-        cloudData.forEach((entry: any) => {
-          if (entry.game_type === 'venezuela') Object.keys(entry.data).forEach(id => updateVenezuela(selectedDate, id, entry.data[id]));
-          if (entry.game_type === 'peru') Object.keys(entry.data).forEach(id => updatePeru(selectedDate, id, entry.data[id]));
-        });
-      } catch (err) { console.error("Sync error:", err); }
-    };
-    syncData();
-  }, [selectedDate, updateVenezuela, updatePeru]);
 
-  useEffect(() => { checkAuth(); }, [checkAuth]);
+        // Marcamos la fecha como sincronizada ANTES de actualizar el estado
+        // para evitar que el re-render dispare otro sync
+        syncedDates.current.add(dateStr);
+
+        cloudData.forEach((entry: any) => {
+          if (entry.game_type === 'venezuela') {
+            Object.keys(entry.data).forEach(id => updateVenezuela(selectedDate, id, entry.data[id]));
+          }
+          if (entry.game_type === 'peru') {
+            Object.keys(entry.data).forEach(id => updatePeru(selectedDate, id, entry.data[id]));
+          }
+          if (entry.game_type === 'triples') {
+            Object.keys(entry.data).forEach(id => {
+              // Los triples vienen como id_r1, id_r2, id_r3 - reconstruir por sorteo
+            });
+          }
+          if (entry.game_type === 'terminales') {
+            // Similar para terminales
+          }
+          if (entry.game_type === 'mas1') {
+            if (entry.data.mas1_numero !== undefined) {
+              updateMas1(selectedDate, entry.data.mas1_numero || '', entry.data.mas1_animal || '');
+            }
+          }
+        });
+      } catch (err) {
+        console.error("Sync error:", err);
+      }
+    };
+
+    syncData();
+  }, [selectedDate]); // FIX: SOLO selectedDate como dependencia, sin updateVenezuela/updatePeru
+
+  useEffect(() => { checkAuth(); }, []); // FIX: Array vacío, checkAuth no cambia nunca
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type });
@@ -345,15 +434,19 @@ function App() {
     }
   };
 
-  const getSorteos = () => selectedGame === 'peru' ? pRes : vRes;
+  // FIX: getSorteos ahora depende de selectedGame correctamente
+  const getSorteos = useCallback(() => {
+    return selectedGame === 'peru' ? pRes : vRes;
+  }, [selectedGame, pRes, vRes]);
 
+  // FIX: getAnimalDelMomento ahora usa getSorteos como dependencia correctamente
   const getAnimalDelMomento = useCallback(() => {
     const s = getSorteos();
     for (let i = s.length - 1; i >= 0; i--) {
       if (s[i].result) return { animal: getAnimal(s[i].result) };
     }
     return { animal: null };
-  }, [selectedGame, vRes, pRes]);
+  }, [getSorteos]);
 
   const filteredAnimals = ANIMALS.filter(a => {
     if (searchQuery) return a.name.toLowerCase().includes(searchQuery.toLowerCase()) || a.num.includes(searchQuery);
@@ -396,10 +489,27 @@ function App() {
 
   const { animal: aMD } = getAnimalDelMomento();
 
+  // FIX MÓVIL: Handler para cambio de fecha con navegación anterior/siguiente
+  // Usa callback para garantizar estado fresco sin depender de selectedDate en closure
+  const goToPrevDay = useCallback(() => {
+    setSelectedDate(prev => new Date(prev.getTime() - 86400000));
+  }, []);
+
+  const goToNextDay = useCallback(() => {
+    setSelectedDate(prev => new Date(prev.getTime() + 86400000));
+  }, []);
+
   return (
     <div className="min-h-screen bg-emerald-900 text-white">
       {datePickerOpen && (
-        <InlineCalendar selectedDate={selectedDate} onSelectDate={setSelectedDate} onClose={() => setDatePickerOpen(false)} />
+        <InlineCalendar
+          selectedDate={selectedDate}
+          onSelectDate={(date) => {
+            setSelectedDate(date);
+            setDatePickerOpen(false);
+          }}
+          onClose={() => setDatePickerOpen(false)}
+        />
       )}
 
       {toast && (
@@ -498,11 +608,18 @@ function App() {
         </div>
       </nav>
 
-      {/* MENU MOBILE */}
+      {/* MENU MOBILE - FIX: Cerrar menú al cambiar sección */}
       {menuOpen && (
-        <div className="fixed inset-0 z-40 bg-emerald-900 pt-20 p-4 flex flex-col gap-2">
+        <div
+          className="fixed z-40 bg-emerald-900 p-4 flex flex-col gap-2"
+          style={{ top: '64px', left: 0, right: 0, bottom: 0 }}
+        >
           {(['inicio', 'resultados', 'animales', 'horarios', 'preguntas', 'contacto'] as const).map(s => (
-            <button key={s} onClick={() => { setActiveSection(s); setMenuOpen(false); }} className="py-3 text-left text-lg hover:bg-emerald-800 px-4 rounded-lg capitalize">
+            <button
+              key={s}
+              onClick={() => { setActiveSection(s); setMenuOpen(false); }}
+              className="py-3 text-left text-lg hover:bg-emerald-800 px-4 rounded-lg capitalize"
+            >
               {s.charAt(0).toUpperCase() + s.slice(1)}
             </button>
           ))}
@@ -558,17 +675,29 @@ function App() {
                 </button>
               ))}
             </div>
+
+            {/* FIX MÓVIL: Navegación de fecha con callbacks estables */}
             <div className="flex items-center justify-center gap-4">
-              <button onClick={() => setSelectedDate(new Date(selectedDate.getTime() - 86400000))} className="p-2 bg-emerald-800 rounded-lg hover:bg-emerald-700">
+              <button
+                onClick={goToPrevDay}
+                className="p-2 bg-emerald-800 rounded-lg hover:bg-emerald-700 active:scale-95 transition-transform touch-manipulation"
+              >
                 <ChevronLeft className="w-5 h-5" />
               </button>
-              <button onClick={() => setDatePickerOpen(true)} className="bg-emerald-800 px-4 py-2 rounded-lg hover:bg-emerald-700">
+              <button
+                onClick={() => setDatePickerOpen(true)}
+                className="bg-emerald-800 px-4 py-2 rounded-lg hover:bg-emerald-700 touch-manipulation"
+              >
                 {formatDate(selectedDate)}
               </button>
-              <button onClick={() => setSelectedDate(new Date(selectedDate.getTime() + 86400000))} className="p-2 bg-emerald-800 rounded-lg hover:bg-emerald-700">
+              <button
+                onClick={goToNextDay}
+                className="p-2 bg-emerald-800 rounded-lg hover:bg-emerald-700 active:scale-95 transition-transform touch-manipulation"
+              >
                 <ChevronRight className="w-5 h-5" />
               </button>
             </div>
+
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {(selectedGame === 'venezuela' || selectedGame === 'peru') && getSorteos().map(s => renderAnimalitoCard(s))}
               {selectedGame === 'triples' && tRes.map((s: any) => (
