@@ -42,7 +42,6 @@ function InlineCalendar({ selectedDate, onSelectDate, onClose }: InlineCalendarP
   const MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   const DAYS_HEADER = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 
-  // FIX MÓVIL: Bloquear scroll del body cuando el calendario está abierto
   useEffect(() => {
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -68,8 +67,6 @@ function InlineCalendar({ selectedDate, onSelectDate, onClose }: InlineCalendarP
     month.getMonth() === selectedDate.getMonth() &&
     month.getFullYear() === selectedDate.getFullYear();
 
-  // FIX MÓVIL: Usar position fixed con height calculado para Android Chrome
-  // evita el bug de la barra de navegación inferior
   return (
     <div
       className="fixed z-50 flex items-center justify-center bg-black/60 p-4"
@@ -176,7 +173,7 @@ function AdminPanelContent({ activeAdminTab, getDayState, updateVenezuela, updat
       results['mas1_animal'] = adminDayState.mas1.animal_num;
     }
     setLocalResults(results);
-  }, [activeAdminTab, adminSelectedDate]); // FIX: removido adminDayState para evitar loops
+  }, [activeAdminTab, adminSelectedDate]);
 
   const handleSave = async () => {
     const dateStr = adminSelectedDate.toISOString().split('T')[0];
@@ -338,7 +335,6 @@ function App() {
   const [showRules, setShowRules] = useState(false);
   const [adminSelectedDate, setAdminSelectedDate] = useState(new Date());
 
-  // FIX: Ref para rastrear si ya se hizo sync de una fecha, evitando loops
   const syncedDates = useRef<Set<string>>(new Set());
 
   const {
@@ -362,12 +358,9 @@ function App() {
   const dayState = getDayState(selectedDate);
   const { venezuela: vRes, peru: pRes, triples: tRes, terminales: termRes, mas1: mRes } = dayState;
 
-  // FIX PRINCIPAL: El loop infinito se corregía quitando updateVenezuela/updatePeru
-  // de las dependencias Y usando un ref para no re-sincronizar la misma fecha.
   useEffect(() => {
     const dateStr = selectedDate.toISOString().split('T')[0];
 
-    // Si ya sincronizamos esta fecha en esta sesión, no volver a hacerlo
     if (syncedDates.current.has(dateStr)) return;
 
     const syncData = async () => {
@@ -376,8 +369,6 @@ function App() {
         if (!response.ok) return;
         const cloudData = await response.json();
 
-        // Marcamos la fecha como sincronizada ANTES de actualizar el estado
-        // para evitar que el re-render dispare otro sync
         syncedDates.current.add(dateStr);
 
         cloudData.forEach((entry: any) => {
@@ -388,12 +379,12 @@ function App() {
             Object.keys(entry.data).forEach(id => updatePeru(selectedDate, id, entry.data[id]));
           }
           if (entry.game_type === 'triples') {
-            Object.keys(entry.data).forEach(id => {
-              // Los triples vienen como id_r1, id_r2, id_r3 - reconstruir por sorteo
-            });
+            // Los triples vienen como id_r1, id_r2, id_r3 - pendiente de implementar
+            void entry.data;
           }
           if (entry.game_type === 'terminales') {
-            // Similar para terminales
+            // Pendiente de implementar
+            void entry.data;
           }
           if (entry.game_type === 'mas1') {
             if (entry.data.mas1_numero !== undefined) {
@@ -407,9 +398,9 @@ function App() {
     };
 
     syncData();
-  }, [selectedDate]); // FIX: SOLO selectedDate como dependencia, sin updateVenezuela/updatePeru
+  }, [selectedDate]);
 
-  useEffect(() => { checkAuth(); }, []); // FIX: Array vacío, checkAuth no cambia nunca
+  useEffect(() => { checkAuth(); }, []);
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type });
@@ -434,12 +425,10 @@ function App() {
     }
   };
 
-  // FIX: getSorteos ahora depende de selectedGame correctamente
   const getSorteos = useCallback(() => {
     return selectedGame === 'peru' ? pRes : vRes;
   }, [selectedGame, pRes, vRes]);
 
-  // FIX: getAnimalDelMomento ahora usa getSorteos como dependencia correctamente
   const getAnimalDelMomento = useCallback(() => {
     const s = getSorteos();
     for (let i = s.length - 1; i >= 0; i--) {
@@ -489,8 +478,6 @@ function App() {
 
   const { animal: aMD } = getAnimalDelMomento();
 
-  // FIX MÓVIL: Handler para cambio de fecha con navegación anterior/siguiente
-  // Usa callback para garantizar estado fresco sin depender de selectedDate en closure
   const goToPrevDay = useCallback(() => {
     setSelectedDate(prev => new Date(prev.getTime() - 86400000));
   }, []);
@@ -608,7 +595,7 @@ function App() {
         </div>
       </nav>
 
-      {/* MENU MOBILE - FIX: Cerrar menú al cambiar sección */}
+      {/* MENU MOBILE */}
       {menuOpen && (
         <div
           className="fixed z-40 bg-emerald-900 p-4 flex flex-col gap-2"
@@ -676,7 +663,6 @@ function App() {
               ))}
             </div>
 
-            {/* FIX MÓVIL: Navegación de fecha con callbacks estables */}
             <div className="flex items-center justify-center gap-4">
               <button
                 onClick={goToPrevDay}
