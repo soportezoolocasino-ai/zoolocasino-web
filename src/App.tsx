@@ -829,12 +829,39 @@ function App() {
                   <div className="text-sm text-emerald-400 mt-1">{TT_NAMES[s.time]}</div>
                 </div>
               ))}
-              {selectedGame === 'mas1' && (
-                <div className="col-span-2 p-6 bg-emerald-800/50 text-center rounded-xl">
-                  <div className="text-3xl font-black text-yellow-400">{mRes.numero || '?'}</div>
-                  <div className="text-sm text-emerald-400 mt-2">Animal: {mRes.animal_num || '?'}</div>
-                </div>
-              )}
+              {selectedGame === 'mas1' && (() => {
+                const mas1Animal = mRes.animal_num ? getAnimal(mRes.animal_num) : null;
+                return (
+                  <div className="col-span-2 md:col-span-3">
+                    <div className="mas1-result-card p-6 bg-emerald-800/50 border border-emerald-700 rounded-2xl text-center max-w-xs mx-auto">
+                      {/* Número grande */}
+                      <div className="text-6xl font-black text-yellow-400 mb-1">
+                        {mRes.numero || '?'}
+                      </div>
+                      <div className="text-emerald-400 text-xs mb-4 uppercase tracking-widest">Número MÁS 1</div>
+
+                      {/* Imagen del animal */}
+                      {mas1Animal ? (
+                        <>
+                          <img
+                            src={`/animals/${mas1Animal.num}-${mas1Animal.name.toLowerCase().replace(/[áéíóúñü]/g, (x: string) => ({'á':'a','é':'e','í':'i','ó':'o','ú':'u','ñ':'n','ü':'u'}[x]||x))}.jpg`}
+                            alt={mas1Animal.name}
+                            className="w-36 h-36 rounded-full object-cover mx-auto border-4 border-yellow-400/50 shadow-lg mb-3"
+                            onError={(e) => { (e.target as HTMLImageElement).src = '/animals/0-delfin.jpg'; }}
+                          />
+                          <div className="text-lg font-bold text-white">{mas1Animal.name}</div>
+                          <div className="text-emerald-300 text-sm">N° {mRes.animal_num}</div>
+                        </>
+                      ) : (
+                        <div className="w-36 h-36 rounded-full bg-emerald-700/50 border border-emerald-600 flex flex-col items-center justify-center mx-auto mb-3">
+                          <Clock className="w-10 h-10 text-emerald-400 mb-1" />
+                          <span className="text-xs text-emerald-400">Sin resultado</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           </div>
         )}
