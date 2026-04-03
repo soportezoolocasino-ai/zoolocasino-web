@@ -270,9 +270,16 @@
 .sorteo-badge.en-vivo    { background: #22c55e !important; color: white !important; }
 .sorteo-badge.pendiente  { background: #3b82f6 !important; color: white !important; }
 
-/* ─────────────────────────────────────────────
-   MISC
-───────────────────────────────────────────── */
+/* MAS 1 result card */
+.mas1-result-card {
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.mas1-result-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 30px rgba(245,158,11,0.2);
+}
+
+
 .card-emerald { background: rgba(6,78,59,0.5); border: 1px solid #059669; border-radius: 12px; }
 
 input::placeholder { color: #6ee7b7 !important; }
