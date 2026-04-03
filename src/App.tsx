@@ -22,14 +22,18 @@ import {
   LogOut,
   Save,
   Trash2,
-  Mail
+  Mail,
+  Trophy,
+  TrendingUp,
+  Star,
+  Info
 } from 'lucide-react';
 import './App.css';
 
 const API_URL = "https://zoolocasino-api.onrender.com";
 
 // ─────────────────────────────────────────────
-// COMPONENTE CALENDARIO INLINE - CORREGIDO PARA MÓVIL ANDROID
+// COMPONENTE CALENDARIO INLINE
 // ─────────────────────────────────────────────
 interface InlineCalendarProps {
   selectedDate: Date;
@@ -45,9 +49,7 @@ function InlineCalendar({ selectedDate, onSelectDate, onClose }: InlineCalendarP
   useEffect(() => {
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = originalOverflow;
-    };
+    return () => { document.body.style.overflow = originalOverflow; };
   }, []);
 
   const generateDays = () => {
@@ -136,6 +138,166 @@ function InlineCalendar({ selectedDate, onSelectDate, onClose }: InlineCalendarP
         </button>
       </div>
     </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// HERO SECTION - Animales flotando sobre móvil
+// ─────────────────────────────────────────────
+function HeroSection({ onShowRules, onGoToResultados }: { onShowRules: () => void; onGoToResultados: () => void }) {
+  // Lista de animales para la animación (usamos los primeros 8)
+  const heroAnimals = [
+    { num: '05', name: 'leon',      style: { top: '8%',  left: '18%',  animDelay: '0s',    size: 72 } },
+    { num: '10', name: 'tigre',     style: { top: '4%',  right: '18%', animDelay: '0.4s',  size: 64 } },
+    { num: '35', name: 'aguila',    style: { top: '32%', left: '12%',  animDelay: '0.8s',  size: 78 } },
+    { num: '29', name: 'elefante',  style: { top: '28%', right: '14%', animDelay: '1.2s',  size: 70 } },
+    { num: '21', name: 'gallo',     style: { top: '56%', left: '10%',  animDelay: '0.6s',  size: 66 } },
+    { num: '27', name: 'mono',      style: { top: '60%', right: '12%', animDelay: '1s',    size: 74 } },
+    { num: '40', name: 'lechuza',   style: { top: '76%', left: '22%',  animDelay: '1.4s',  size: 60 } },
+    { num: '40', name: 'delfin',    style: { top: '72%', right: '20%', animDelay: '0.2s',  size: 80 } },
+  ];
+
+  return (
+    <div className="hero-section relative overflow-hidden" style={{ minHeight: '520px' }}>
+      {/* Fondo con gradiente */}
+      <div className="absolute inset-0 bg-gradient-to-b from-emerald-800/30 to-transparent pointer-events-none" />
+
+      <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8 px-2 py-8 max-w-5xl mx-auto">
+        
+        {/* Texto izquierda */}
+        <div className="flex-1 text-center md:text-left space-y-5 md:pr-8">
+          <div className="inline-flex items-center gap-2 bg-emerald-800/60 border border-emerald-600 rounded-full px-4 py-1.5 text-sm">
+            <span className="live-indicator inline-block w-2 h-2 rounded-full bg-green-400"></span>
+            Resultados en vivo
+          </div>
+
+          <h1 className="text-4xl md:text-5xl font-black leading-tight">
+            La mejor lotería de{' '}
+            <span className="text-yellow-400">animales</span>
+          </h1>
+
+          <p className="text-emerald-200 text-base md:text-lg">
+            Consulta los resultados de los sorteos de animales en tiempo real.{' '}
+            <span className="text-yellow-400 font-semibold">¡Juega con confianza con Zoolo CASINO!</span>
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
+            <button
+              onClick={onGoToResultados}
+              className="hero-btn-yellow flex items-center justify-center gap-2"
+            >
+              <Trophy className="w-5 h-5" />
+              Ver resultados
+            </button>
+            <button
+              onClick={onShowRules}
+              className="hero-btn-outline flex items-center justify-center gap-2"
+            >
+              <Info className="w-5 h-5" />
+              ¿Cómo jugar?
+            </button>
+          </div>
+        </div>
+
+        {/* Móvil con animales flotando */}
+        <div className="flex-shrink-0 relative" style={{ width: '260px', height: '420px' }}>
+          {/* Cuerpo del móvil */}
+          <div className="mobile-frame absolute inset-x-8 inset-y-0 rounded-3xl border-4 border-emerald-600/60 bg-emerald-900/40 backdrop-blur-sm shadow-2xl z-10">
+            {/* Pantalla interior */}
+            <div className="absolute inset-2 rounded-2xl bg-emerald-800/30 border border-emerald-700/40" />
+            {/* Notch */}
+            <div className="absolute top-3 left-1/2 -translate-x-1/2 w-12 h-2 bg-emerald-700/60 rounded-full" />
+            {/* Botón home */}
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 w-8 h-2 bg-emerald-700/60 rounded-full" />
+          </div>
+
+          {/* Animales flotando alrededor del móvil */}
+          {heroAnimals.map((a, i) => (
+            <div
+              key={i}
+              className="hero-animal absolute z-20"
+              style={{
+                ...a.style,
+                animationDelay: a.style.animDelay,
+                width: a.style.size,
+                height: a.style.size,
+              }}
+            >
+              <img
+                src={`/animals/${a.num}-${a.name}.jpg`}
+                alt={a.name}
+                className="w-full h-full rounded-full object-cover border-3 shadow-lg"
+                style={{ border: '3px solid rgba(251,191,36,0.6)', boxShadow: '0 4px 15px rgba(0,0,0,0.4)' }}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/animals/0-delfin.jpg';
+                }}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// STATS CARDS
+// ─────────────────────────────────────────────
+function StatsCards() {
+  return (
+    <div className="grid grid-cols-3 gap-3 md:gap-4">
+      <Card className="stats-card p-4 md:p-5 bg-emerald-800/50 border-emerald-700 text-white text-center">
+        <Trophy className="w-7 h-7 text-yellow-400 mx-auto mb-2" />
+        <div className="text-2xl md:text-3xl font-black text-white">42</div>
+        <div className="text-xs md:text-sm text-emerald-300 mt-1">Animales</div>
+      </Card>
+      <Card className="stats-card p-4 md:p-5 bg-emerald-800/50 border-emerald-700 text-white text-center">
+        <TrendingUp className="w-7 h-7 text-emerald-400 mx-auto mb-2" />
+        <div className="text-2xl md:text-3xl font-black text-white">12</div>
+        <div className="text-xs md:text-sm text-emerald-300 mt-1">Sorteos/Día</div>
+      </Card>
+      <Card className="stats-card p-4 md:p-5 bg-emerald-800/50 border-emerald-700 text-white text-center">
+        <Star className="w-7 h-7 text-yellow-400 mx-auto mb-2" />
+        <div className="text-2xl md:text-3xl font-black text-white">100%</div>
+        <div className="text-xs md:text-sm text-emerald-300 mt-1">Confiable</div>
+      </Card>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// ANIMAL DEL MOMENTO
+// ─────────────────────────────────────────────
+function AnimalDelMomento({ animal, imageUrl, nextSorteoTime }: { animal: any; imageUrl: string; nextSorteoTime?: string }) {
+  return (
+    <Card className="animal-momento-card p-6 bg-emerald-800/50 border-emerald-700 max-w-sm mx-auto text-center">
+      <div className="flex items-center justify-center gap-2 mb-4">
+        <Star className="w-4 h-4 text-yellow-400" />
+        <h3 className="text-yellow-400 font-bold text-base">Animal del Momento</h3>
+      </div>
+
+      {animal ? (
+        <div className="space-y-2">
+          <img
+            src={imageUrl}
+            className="w-32 h-32 rounded-2xl mx-auto object-cover border-4 border-yellow-400/40 shadow-lg"
+            alt={animal.name}
+          />
+          <div className="text-xl font-bold">{animal.name}</div>
+          <div className="text-emerald-300 text-sm">N° {animal.num}</div>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          <div className="waiting-clock w-24 h-24 rounded-2xl bg-emerald-700/60 flex items-center justify-center mx-auto border border-emerald-600">
+            <Clock className="w-12 h-12 text-emerald-400 clock-spin" />
+          </div>
+          <div className="font-bold text-lg text-white">Esperando sorteo</div>
+          {nextSorteoTime && (
+            <div className="text-emerald-400 text-sm">Sorteo: {nextSorteoTime}</div>
+          )}
+        </div>
+      )}
+    </Card>
   );
 }
 
@@ -360,17 +522,13 @@ function App() {
 
   useEffect(() => {
     const dateStr = selectedDate.toISOString().split('T')[0];
-
     if (syncedDates.current.has(dateStr)) return;
-
     const syncData = async () => {
       try {
         const response = await fetch(`${API_URL}/api/results/${dateStr}`);
         if (!response.ok) return;
         const cloudData = await response.json();
-
         syncedDates.current.add(dateStr);
-
         cloudData.forEach((entry: any) => {
           if (entry.game_type === 'venezuela') {
             Object.keys(entry.data).forEach(id => updateVenezuela(selectedDate, id, entry.data[id]));
@@ -378,25 +536,16 @@ function App() {
           if (entry.game_type === 'peru') {
             Object.keys(entry.data).forEach(id => updatePeru(selectedDate, id, entry.data[id]));
           }
-          if (entry.game_type === 'triples') {
-            // Los triples vienen como id_r1, id_r2, id_r3 - pendiente de implementar
-            void entry.data;
-          }
-          if (entry.game_type === 'terminales') {
-            // Pendiente de implementar
-            void entry.data;
-          }
+          if (entry.game_type === 'triples') { void entry.data; }
+          if (entry.game_type === 'terminales') { void entry.data; }
           if (entry.game_type === 'mas1') {
             if (entry.data.mas1_numero !== undefined) {
               updateMas1(selectedDate, entry.data.mas1_numero || '', entry.data.mas1_animal || '');
             }
           }
         });
-      } catch (err) {
-        console.error("Sync error:", err);
-      }
+      } catch (err) { console.error("Sync error:", err); }
     };
-
     syncData();
   }, [selectedDate]);
 
@@ -436,6 +585,18 @@ function App() {
     }
     return { animal: null };
   }, [getSorteos]);
+
+  // Calcular próximo sorteo
+  const getNextSorteoTime = useCallback(() => {
+    const now = new Date();
+    const times = selectedGame === 'peru' ? PERU_TIMES : VENEZUELA_TIMES;
+    const currentMins = now.getHours() * 60 + now.getMinutes();
+    for (const t of times) {
+      const [h, m] = t.split(':').map(Number);
+      if (h * 60 + m > currentMins) return `${t}`;
+    }
+    return times[0];
+  }, [selectedGame]);
 
   const filteredAnimals = ANIMALS.filter(a => {
     if (searchQuery) return a.name.toLowerCase().includes(searchQuery.toLowerCase()) || a.num.includes(searchQuery);
@@ -491,10 +652,7 @@ function App() {
       {datePickerOpen && (
         <InlineCalendar
           selectedDate={selectedDate}
-          onSelectDate={(date) => {
-            setSelectedDate(date);
-            setDatePickerOpen(false);
-          }}
+          onSelectDate={(date) => { setSelectedDate(date); setDatePickerOpen(false); }}
           onClose={() => setDatePickerOpen(false)}
         />
       )}
@@ -510,19 +668,8 @@ function App() {
         <DialogContent className="bg-emerald-900 border-emerald-700 text-white">
           <DialogHeader><DialogTitle>Admin</DialogTitle></DialogHeader>
           <form onSubmit={handleLogin} className="space-y-4">
-            <Input
-              value={loginForm.username}
-              onChange={e => setLoginForm({...loginForm, username: e.target.value})}
-              placeholder="Usuario"
-              className="bg-emerald-800"
-            />
-            <Input
-              type="password"
-              value={loginForm.password}
-              onChange={e => setLoginForm({...loginForm, password: e.target.value})}
-              placeholder="Contraseña"
-              className="bg-emerald-800"
-            />
+            <Input value={loginForm.username} onChange={e => setLoginForm({...loginForm, username: e.target.value})} placeholder="Usuario" className="bg-emerald-800" />
+            <Input type="password" value={loginForm.password} onChange={e => setLoginForm({...loginForm, password: e.target.value})} placeholder="Contraseña" className="bg-emerald-800" />
             <Button type="submit" className="w-full bg-yellow-500 text-black">Login</Button>
           </form>
         </DialogContent>
@@ -583,10 +730,7 @@ function App() {
           ))}
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => isAuthenticated ? setAdminOpen(true) : setLoginOpen(true)}
-            className="bg-yellow-500/20 text-yellow-400 px-3 py-2 rounded-lg"
-          >
+          <button onClick={() => isAuthenticated ? setAdminOpen(true) : setLoginOpen(true)} className="bg-yellow-500/20 text-yellow-400 px-3 py-2 rounded-lg">
             <Lock className="w-4 h-4" />
           </button>
           <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden">
@@ -597,16 +741,9 @@ function App() {
 
       {/* MENU MOBILE */}
       {menuOpen && (
-        <div
-          className="fixed z-40 bg-emerald-900 p-4 flex flex-col gap-2"
-          style={{ top: '64px', left: 0, right: 0, bottom: 0 }}
-        >
+        <div className="fixed z-40 bg-emerald-900 p-4 flex flex-col gap-2" style={{ top: '64px', left: 0, right: 0, bottom: 0 }}>
           {(['inicio', 'resultados', 'animales', 'horarios', 'preguntas', 'contacto'] as const).map(s => (
-            <button
-              key={s}
-              onClick={() => { setActiveSection(s); setMenuOpen(false); }}
-              className="py-3 text-left text-lg hover:bg-emerald-800 px-4 rounded-lg capitalize"
-            >
+            <button key={s} onClick={() => { setActiveSection(s); setMenuOpen(false); }} className="py-3 text-left text-lg hover:bg-emerald-800 px-4 rounded-lg capitalize">
               {s.charAt(0).toUpperCase() + s.slice(1)}
             </button>
           ))}
@@ -616,39 +753,42 @@ function App() {
       {/* MAIN CONTENT */}
       <main className="max-w-7xl mx-auto px-4 py-6">
 
-        {/* INICIO */}
+        {/* ── INICIO ── */}
         {activeSection === 'inicio' && (
-          <div className="space-y-8 text-center">
-            <h1 className="text-4xl md:text-6xl font-black">
-              La mejor lotería de <span className="text-yellow-400">animales</span>
-            </h1>
-            <div className="grid grid-cols-3 gap-4">
-              <Card className="p-4 bg-emerald-800/50 border-emerald-700 text-white">42 Animales</Card>
-              <Card className="p-4 bg-emerald-800/50 border-emerald-700 text-white">12 Sorteos</Card>
-              <Card className="p-4 bg-emerald-800/50 border-emerald-700 text-white">Confiable</Card>
+          <div className="space-y-8">
+
+            {/* Hero con animales flotando */}
+            <HeroSection
+              onShowRules={() => setShowRules(true)}
+              onGoToResultados={() => setActiveSection('resultados')}
+            />
+
+            {/* Stats */}
+            <StatsCards />
+
+            {/* Animal del Momento */}
+            <AnimalDelMomento
+              animal={aMD}
+              imageUrl={aMD ? getAnimalImagePath(aMD, selectedGame === 'peru' ? 'peru' : 'venezuela') : ''}
+              nextSorteoTime={getNextSorteoTime()}
+            />
+
+            {/* Botón ¿Cómo jugar? */}
+            <div className="text-center space-y-2">
+              <button
+                onClick={() => setShowRules(true)}
+                className="hero-btn-yellow inline-flex items-center gap-2 mx-auto"
+              >
+                <Info className="w-5 h-5" />
+                ¿Cómo jugar ZooloCASINO?
+              </button>
+              <p className="text-emerald-400 text-sm">Descubre cómo ganar con nuestros diferentes juegos.</p>
             </div>
-            <Card className="p-6 bg-emerald-800/50 border-emerald-700 max-w-md mx-auto">
-              <h3 className="text-yellow-400 mb-4 font-bold">Último resultado</h3>
-              {aMD ? (
-                <>
-                  <img
-                    src={getAnimalImagePath(aMD, selectedGame === 'peru' ? 'peru' : 'venezuela')}
-                    className="w-32 h-32 rounded-xl mx-auto mb-2 object-cover"
-                    alt={aMD.name}
-                  />
-                  <div className="text-xl font-bold">{aMD.name}</div>
-                </>
-              ) : (
-                <div className="text-emerald-400">Esperando resultado...</div>
-              )}
-            </Card>
-            <Button onClick={() => setShowRules(true)} className="bg-yellow-500 text-black font-bold px-8 py-4">
-              ¿Cómo jugar?
-            </Button>
+
           </div>
         )}
 
-        {/* RESULTADOS */}
+        {/* ── RESULTADOS ── */}
         {activeSection === 'resultados' && (
           <div className="space-y-6">
             <div className="flex justify-center gap-2 flex-wrap">
@@ -664,22 +804,13 @@ function App() {
             </div>
 
             <div className="flex items-center justify-center gap-4">
-              <button
-                onClick={goToPrevDay}
-                className="p-2 bg-emerald-800 rounded-lg hover:bg-emerald-700 active:scale-95 transition-transform touch-manipulation"
-              >
+              <button onClick={goToPrevDay} className="p-2 bg-emerald-800 rounded-lg hover:bg-emerald-700 active:scale-95 transition-transform touch-manipulation">
                 <ChevronLeft className="w-5 h-5" />
               </button>
-              <button
-                onClick={() => setDatePickerOpen(true)}
-                className="bg-emerald-800 px-4 py-2 rounded-lg hover:bg-emerald-700 touch-manipulation"
-              >
+              <button onClick={() => setDatePickerOpen(true)} className="bg-emerald-800 px-4 py-2 rounded-lg hover:bg-emerald-700 touch-manipulation">
                 {formatDate(selectedDate)}
               </button>
-              <button
-                onClick={goToNextDay}
-                className="p-2 bg-emerald-800 rounded-lg hover:bg-emerald-700 active:scale-95 transition-transform touch-manipulation"
-              >
+              <button onClick={goToNextDay} className="p-2 bg-emerald-800 rounded-lg hover:bg-emerald-700 active:scale-95 transition-transform touch-manipulation">
                 <ChevronRight className="w-5 h-5" />
               </button>
             </div>
@@ -708,25 +839,18 @@ function App() {
           </div>
         )}
 
-        {/* ANIMALES */}
+        {/* ── ANIMALES ── */}
         {activeSection === 'animales' && (
           <div className="space-y-6">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500" />
-              <Input
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Buscar animal o número..."
-                className="pl-10 bg-emerald-800 border-emerald-700 text-white"
-              />
+              <Input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Buscar animal o número..." className="pl-10 bg-emerald-800 border-emerald-700 text-white" />
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {filteredAnimals.map(a => (
                 <div key={a.num} className="bg-emerald-800/50 border border-emerald-700 rounded-xl p-3 flex flex-col items-center gap-2">
                   <img src={a.image} className="w-20 h-20 rounded-lg object-cover" alt={a.name} />
-                  <Badge className={a.color === 'rojo' ? 'bg-red-500' : a.color === 'verde' ? 'bg-green-500' : 'bg-gray-700'}>
-                    {a.num}
-                  </Badge>
+                  <Badge className={a.color === 'rojo' ? 'bg-red-500' : a.color === 'verde' ? 'bg-green-500' : 'bg-gray-700'}>{a.num}</Badge>
                   <div className="font-medium text-sm text-center">{a.name}</div>
                 </div>
               ))}
@@ -734,17 +858,13 @@ function App() {
           </div>
         )}
 
-        {/* HORARIOS */}
+        {/* ── HORARIOS ── */}
         {activeSection === 'horarios' && (
           <div className="space-y-6 text-center">
             <h2 className="text-2xl font-bold">Horarios de Sorteos</h2>
             <div className="flex justify-center gap-4 mb-4">
               {(['venezuela', 'peru'] as const).map(g => (
-                <button
-                  key={g}
-                  onClick={() => setSelectedGame(g)}
-                  className={`px-4 py-2 rounded-lg capitalize ${selectedGame === g ? 'bg-yellow-500 text-black font-bold' : 'bg-emerald-800 text-white'}`}
-                >
+                <button key={g} onClick={() => setSelectedGame(g)} className={`px-4 py-2 rounded-lg capitalize ${selectedGame === g ? 'bg-yellow-500 text-black font-bold' : 'bg-emerald-800 text-white'}`}>
                   {g === 'venezuela' ? '🇻🇪 Venezuela' : '🇵🇪 Perú'}
                 </button>
               ))}
@@ -760,7 +880,7 @@ function App() {
           </div>
         )}
 
-        {/* PREGUNTAS */}
+        {/* ── PREGUNTAS ── */}
         {activeSection === 'preguntas' && (
           <div className="space-y-4 max-w-2xl mx-auto">
             <h2 className="text-2xl font-bold text-center mb-6">Preguntas Frecuentes</h2>
@@ -778,16 +898,14 @@ function App() {
           </div>
         )}
 
-        {/* CONTACTO */}
+        {/* ── CONTACTO ── */}
         {activeSection === 'contacto' && (
           <div className="max-w-md mx-auto text-center space-y-4">
             <h2 className="text-2xl font-bold mb-6">Contacto</h2>
             <Card className="p-8 bg-emerald-800/50 border-emerald-700">
               <Mail className="w-12 h-12 mx-auto mb-4 text-yellow-400" />
               <h3 className="font-bold text-lg mb-2">Email</h3>
-              <a href="mailto:soportezoolo@gmail.com" className="text-yellow-400 hover:underline">
-                soportezoolo@gmail.com
-              </a>
+              <a href="mailto:soportezoolo@gmail.com" className="text-yellow-400 hover:underline">soportezoolo@gmail.com</a>
             </Card>
           </div>
         )}
@@ -805,50 +923,26 @@ function App() {
             <DialogTitle className="text-xl font-bold">ⓘ ¿Cómo jugar ZooloCASINO?</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 p-2">
-
             <div className="bg-emerald-800 rounded-xl p-4">
               <h3 className="text-yellow-400 font-bold text-lg mb-2">🐯 Animalitos (42 animales)</h3>
-              <p className="text-emerald-100 text-sm">
-                Selecciona un animalito de los 42 disponibles. Si aciertas el ganador,{' '}
-                <strong className="text-yellow-400">pagamos 35 veces</strong> lo apostado.
-              </p>
-              <p className="text-emerald-100 text-sm mt-2">
-                🦉 <strong className="text-yellow-400">El 40 (Lechuza) paga el doble:</strong> 70 veces lo apostado.
-              </p>
+              <p className="text-emerald-100 text-sm">Selecciona un animalito de los 42 disponibles. Si aciertas el ganador, <strong className="text-yellow-400">pagamos 35 veces</strong> lo apostado.</p>
+              <p className="text-emerald-100 text-sm mt-2">🦉 <strong className="text-yellow-400">El 40 (Lechuza) paga el doble:</strong> 70 veces lo apostado.</p>
             </div>
-
             <div className="bg-emerald-800 rounded-xl p-4">
               <h3 className="text-yellow-400 font-bold text-lg mb-2">🎲 Triple</h3>
-              <p className="text-emerald-100 text-sm">
-                Acierta 3 números y gana <strong className="text-yellow-400">700 veces</strong> lo apostado.
-              </p>
-              <p className="text-emerald-100 text-sm mt-2">
-                📍 <strong>Aproximado:</strong> Si juegas el 500 y sale el 499 o 501, se paga{' '}
-                <strong className="text-yellow-400">20 veces</strong> lo apostado.
-              </p>
+              <p className="text-emerald-100 text-sm">Acierta 3 números y gana <strong className="text-yellow-400">700 veces</strong> lo apostado.</p>
+              <p className="text-emerald-100 text-sm mt-2">📍 <strong>Aproximado:</strong> Si juegas el 500 y sale el 499 o 501, se paga <strong className="text-yellow-400">20 veces</strong> lo apostado.</p>
             </div>
-
             <div className="bg-emerald-800 rounded-xl p-4">
               <h3 className="text-yellow-400 font-bold text-lg mb-2">🔢 Terminal</h3>
-              <p className="text-emerald-100 text-sm">
-                Acierta 2 números y gana <strong className="text-yellow-400">65 veces</strong> lo apostado.
-              </p>
+              <p className="text-emerald-100 text-sm">Acierta 2 números y gana <strong className="text-yellow-400">65 veces</strong> lo apostado.</p>
             </div>
-
             <div className="bg-emerald-800 rounded-xl p-4">
               <h3 className="text-yellow-400 font-bold text-lg mb-2">⭐ Más 1</h3>
-              <p className="text-emerald-100 text-sm">
-                Selecciona un número del 0 al 9 más un animalito. Si aciertas ambos, gana{' '}
-                <strong className="text-yellow-400">250 veces</strong> lo apostado.
-              </p>
-              <p className="text-emerald-100 text-sm mt-2">
-                💰 Apuesta mínima: <strong className="text-yellow-400">$5</strong>
-              </p>
-              <p className="text-emerald-100 text-sm mt-2">
-                🐯 Si solo aciertas el animal: ganas <strong className="text-yellow-400">35 veces</strong> (igual que ZooloCASINO). Nota: el 40 no tiene valor doble aquí.
-              </p>
+              <p className="text-emerald-100 text-sm">Selecciona un número del 0 al 9 más un animalito. Si aciertas ambos, gana <strong className="text-yellow-400">250 veces</strong> lo apostado.</p>
+              <p className="text-emerald-100 text-sm mt-2">💰 Apuesta mínima: <strong className="text-yellow-400">$5</strong></p>
+              <p className="text-emerald-100 text-sm mt-2">🐯 Si solo aciertas el animal: ganas <strong className="text-yellow-400">35 veces</strong>. Nota: el 40 no tiene valor doble aquí.</p>
             </div>
-
           </div>
         </DialogContent>
       </Dialog>
