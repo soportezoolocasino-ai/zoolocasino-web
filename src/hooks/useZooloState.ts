@@ -1,22 +1,22 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import type { SorteoAnimalito, SorteoTriple, SorteoTerminal, Mas1Result } from '@/types';
 import { VENEZUELA_TIMES, PERU_TIMES, TT_TIMES, getTimezone } from '@/data/animals';
 
-// Formatear fecha como YYYY-MM-DD
-const formatDateKey = (date: Date): string => {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-};
+// ── Backend Flask (resultados automáticos) ─────────────────────────────────
+const FLASK_API = "https://zoolo-casino1-1.onrender.com";
 
-// Crear sorteos iniciales
+const formatDateKey = (date: Date): string =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+
 const mkAnimalitos = (country: 'venezuela' | 'peru'): SorteoAnimalito[] => {
   const times = country === 'venezuela' ? VENEZUELA_TIMES : PERU_TIMES;
   return times.map((t, i) => ({ id: `${country}_a${i}`, time: t, result: '' }));
 };
 
-const mkTriples = (): SorteoTriple[] => 
+const mkTriples = (): SorteoTriple[] =>
   TT_TIMES.map((t, i) => ({ id: `t${i}`, time: t, r1: '', r2: '', r3: '' }));
 
-const mkTerminales = (): SorteoTerminal[] => 
+const mkTerminales = (): SorteoTerminal[] =>
   TT_TIMES.map((t, i) => ({ id: `e${i}`, time: t, r1: '', r2: '' }));
 
 const mkMas1 = (): Mas1Result => ({ numero: '', animal_num: '' });
@@ -33,7 +33,6 @@ interface AppState {
   [dateKey: string]: DayState;
 }
 
-// Crear estado vacío para un día
 const createEmptyDayState = (): DayState => ({
   venezuela: mkAnimalitos('venezuela'),
   peru: mkAnimalitos('peru'),
@@ -42,11 +41,9 @@ const createEmptyDayState = (): DayState => ({
   mas1: mkMas1()
 });
 
-// Autenticación
 const ADMIN_USER = 'cuborubi';
 const ADMIN_PASS = '06251413Jp';
 
-// Obtener hora local según país
 const getLocalTime = (country: 'venezuela' | 'peru') => {
   const now = new Date();
   const offset = getTimezone(country);
@@ -54,13 +51,14 @@ const getLocalTime = (country: 'venezuela' | 'peru') => {
 };
 
 export const useZooloState = () => {
-  // INICIAMOS EL ESTADO VACÍO. Ya no leemos del disco duro (localStorage).
   const [state, setState] = useState<AppState>({});
   const [venezuelaTime, setVenezuelaTime] = useState<Date>(getLocalTime('venezuela'));
   const [peruTime, setPeruTime] = useState<Date>(getLocalTime('peru'));
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const selectedDateRef = useRef<Date>(new Date());
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Actualizar reloj cada segundo
+  // Reloj
   useEffect(() => {
     const interval = setInterval(() => {
       setVenezuelaTime(getLocalTime('venezuela'));
@@ -69,13 +67,75 @@ export const useZooloState = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Obtener estado para una fecha específica
+  // ── Sync desde Flask ────────────────────────────────────────────────────
+  const fetchFromFlask = useCallback(async (date?: Date) => {
+    const target = date || selectedDateRef.current;
+    const dateStr = formatDateKey(target);
+    try {
+      const res = await fetch(`${FLASK_API}/public/resultados-fecha?fecha=${dateStr}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.status !== 'ok') return;
+
+      setState(prev => {
+        const dateKey = dateStr;
+        const day = prev[dateKey] || createEmptyDayState();
+
+        // Mapear PERÚ: hora "HH:MM" → slot en PERU_TIMES
+        const newPeru = day.peru.map((s, i) => {
+          const hora24 = PERU_TIMES[i];
+          const result = data.peru?.[hora24];
+          return result !== undefined && result !== null && String(result) !== ''
+            ? { ...s, result: String(result) }
+            : s;
+        });
+
+        // Mapear VENEZUELA (PLUS en Flask)
+        const newVenezuela = day.venezuela.map((s, i) => {
+          const hora24 = VENEZUELA_TIMES[i];
+          const result = data.venezuela?.[hora24];
+          return result !== undefined && result !== null && String(result) !== ''
+            ? { ...s, result: String(result) }
+            : s;
+        });
+
+        return {
+          ...prev,
+          [dateKey]: { ...day, peru: newPeru, venezuela: newVenezuela }
+        };
+      });
+    } catch (err) {
+      console.warn('[ZooloState] Flask sync error:', err);
+    }
+  }, []);
+
+  // ── Polling cada 30 segundos ────────────────────────────────────────────
+  useEffect(() => {
+    // Carga inicial
+    fetchFromFlask(new Date());
+
+    // Polling
+    pollingRef.current = setInterval(() => {
+      fetchFromFlask(selectedDateRef.current);
+    }, 30000);
+
+    return () => {
+      if (pollingRef.current) clearInterval(pollingRef.current);
+    };
+  }, [fetchFromFlask]);
+
+  // ── Exponer syncDate para cuando cambia la fecha en la UI ───────────────
+  const syncDate = useCallback((date: Date) => {
+    selectedDateRef.current = date;
+    fetchFromFlask(date);
+  }, [fetchFromFlask]);
+
   const getDayState = useCallback((date: Date): DayState => {
     const dateKey = formatDateKey(date);
     return state[dateKey] || createEmptyDayState();
   }, [state]);
 
-  // Autenticación (Esta sí la dejamos en localStorage para no perder la sesión)
+  // Auth
   const login = useCallback((username: string, password: string): boolean => {
     if (username === ADMIN_USER && password === ADMIN_PASS) {
       setIsAuthenticated(true);
@@ -91,13 +151,9 @@ export const useZooloState = () => {
   }, []);
 
   const checkAuth = useCallback(() => {
-    const auth = localStorage.getItem('zoo_admin_auth');
-    if (auth === 'true') {
-      setIsAuthenticated(true);
-    }
+    if (localStorage.getItem('zoo_admin_auth') === 'true') setIsAuthenticated(true);
   }, []);
 
-  // Helpers de tiempo
   const isPast = useCallback((time: string, country: 'venezuela' | 'peru') => {
     const currentTime = country === 'venezuela' ? venezuelaTime : peruTime;
     const [h, m] = time.split(':').map(Number);
@@ -111,154 +167,70 @@ export const useZooloState = () => {
     return diff > 0 && diff <= 30;
   }, [venezuelaTime, peruTime]);
 
-  // Acciones para Venezuela
+  // Acciones locales (mantener compatibilidad con App.tsx existente)
   const updateVenezuela = useCallback((date: Date, id: string, result: string) => {
     const dateKey = formatDateKey(date);
-    setState((prev: AppState) => {
-      const dayState = prev[dateKey] || createEmptyDayState();
-      return {
-        ...prev,
-        [dateKey]: {
-          ...dayState,
-          venezuela: dayState.venezuela.map((s: SorteoAnimalito) => s.id === id ? { ...s, result } : s)
-        }
-      };
+    setState(prev => {
+      const d = prev[dateKey] || createEmptyDayState();
+      return { ...prev, [dateKey]: { ...d, venezuela: d.venezuela.map(s => s.id === id ? { ...s, result } : s) } };
     });
   }, []);
 
   const clearVenezuela = useCallback((date: Date, id: string) => {
-    const dateKey = formatDateKey(date);
-    setState((prev: AppState) => {
-      const dayState = prev[dateKey] || createEmptyDayState();
-      return {
-        ...prev,
-        [dateKey]: {
-          ...dayState,
-          venezuela: dayState.venezuela.map((s: SorteoAnimalito) => s.id === id ? { ...s, result: '' } : s)
-        }
-      };
-    });
-  }, []);
+    updateVenezuela(date, id, '');
+  }, [updateVenezuela]);
 
-  // Acciones para Perú
   const updatePeru = useCallback((date: Date, id: string, result: string) => {
     const dateKey = formatDateKey(date);
-    setState((prev: AppState) => {
-      const dayState = prev[dateKey] || createEmptyDayState();
-      return {
-        ...prev,
-        [dateKey]: {
-          ...dayState,
-          peru: dayState.peru.map((s: SorteoAnimalito) => s.id === id ? { ...s, result } : s)
-        }
-      };
+    setState(prev => {
+      const d = prev[dateKey] || createEmptyDayState();
+      return { ...prev, [dateKey]: { ...d, peru: d.peru.map(s => s.id === id ? { ...s, result } : s) } };
     });
   }, []);
 
   const clearPeru = useCallback((date: Date, id: string) => {
-    const dateKey = formatDateKey(date);
-    setState((prev: AppState) => {
-      const dayState = prev[dateKey] || createEmptyDayState();
-      return {
-        ...prev,
-        [dateKey]: {
-          ...dayState,
-          peru: dayState.peru.map((s: SorteoAnimalito) => s.id === id ? { ...s, result: '' } : s)
-        }
-      };
-    });
-  }, []);
+    updatePeru(date, id, '');
+  }, [updatePeru]);
 
-  // Acciones para Triples
   const updateTriple = useCallback((date: Date, id: string, r1: string, r2: string, r3: string) => {
     const dateKey = formatDateKey(date);
-    setState((prev: AppState) => {
-      const dayState = prev[dateKey] || createEmptyDayState();
-      return {
-        ...prev,
-        [dateKey]: {
-          ...dayState,
-          triples: dayState.triples.map((s: SorteoTriple) => s.id === id ? { ...s, r1, r2, r3 } : s)
-        }
-      };
+    setState(prev => {
+      const d = prev[dateKey] || createEmptyDayState();
+      return { ...prev, [dateKey]: { ...d, triples: d.triples.map(s => s.id === id ? { ...s, r1, r2, r3 } : s) } };
     });
   }, []);
 
   const clearTriple = useCallback((date: Date, id: string) => {
-    const dateKey = formatDateKey(date);
-    setState((prev: AppState) => {
-      const dayState = prev[dateKey] || createEmptyDayState();
-      return {
-        ...prev,
-        [dateKey]: {
-          ...dayState,
-          triples: dayState.triples.map((s: SorteoTriple) => s.id === id ? { ...s, r1: '', r2: '', r3: '' } : s)
-        }
-      };
-    });
-  }, []);
+    updateTriple(date, id, '', '', '');
+  }, [updateTriple]);
 
-  // Acciones para Terminales
   const updateTerminal = useCallback((date: Date, id: string, r1: string, r2: string) => {
     const dateKey = formatDateKey(date);
-    setState((prev: AppState) => {
-      const dayState = prev[dateKey] || createEmptyDayState();
-      return {
-        ...prev,
-        [dateKey]: {
-          ...dayState,
-          terminales: dayState.terminales.map((s: SorteoTerminal) => s.id === id ? { ...s, r1, r2 } : s)
-        }
-      };
+    setState(prev => {
+      const d = prev[dateKey] || createEmptyDayState();
+      return { ...prev, [dateKey]: { ...d, terminales: d.terminales.map(s => s.id === id ? { ...s, r1, r2 } : s) } };
     });
   }, []);
 
   const clearTerminal = useCallback((date: Date, id: string) => {
-    const dateKey = formatDateKey(date);
-    setState((prev: AppState) => {
-      const dayState = prev[dateKey] || createEmptyDayState();
-      return {
-        ...prev,
-        [dateKey]: {
-          ...dayState,
-          terminales: dayState.terminales.map((s: SorteoTerminal) => s.id === id ? { ...s, r1: '', r2: '' } : s)
-        }
-      };
-    });
-  }, []);
+    updateTerminal(date, id, '', '');
+  }, [updateTerminal]);
 
-  // Acciones para Más 1
   const updateMas1 = useCallback((date: Date, numero: string, animal_num: string) => {
     const dateKey = formatDateKey(date);
-    setState((prev: AppState) => {
-      const dayState = prev[dateKey] || createEmptyDayState();
-      return {
-        ...prev,
-        [dateKey]: {
-          ...dayState,
-          mas1: { numero, animal_num }
-        }
-      };
+    setState(prev => {
+      const d = prev[dateKey] || createEmptyDayState();
+      return { ...prev, [dateKey]: { ...d, mas1: { numero, animal_num } } };
     });
   }, []);
 
   const clearMas1 = useCallback((date: Date) => {
-    const dateKey = formatDateKey(date);
-    setState((prev: AppState) => {
-      const dayState = prev[dateKey] || createEmptyDayState();
-      return {
-        ...prev,
-        [dateKey]: {
-          ...dayState,
-          mas1: mkMas1()
-        }
-      };
-    });
-  }, []);
+    updateMas1(date, '', '');
+  }, [updateMas1]);
 
   return {
     state, getDayState, venezuelaTime, peruTime, isAuthenticated,
-    isPast, isNext, login, logout, checkAuth,
+    isPast, isNext, login, logout, checkAuth, syncDate,
     updateVenezuela, updatePeru, updateTriple, updateTerminal, updateMas1,
     clearVenezuela, clearPeru, clearTriple, clearTerminal, clearMas1
   };
