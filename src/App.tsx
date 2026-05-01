@@ -142,10 +142,9 @@ function InlineCalendar({ selectedDate, onSelectDate, onClose }: InlineCalendarP
 }
 
 // ─────────────────────────────────────────────
-// HERO SECTION - Animales flotando sobre móvil
+// HERO SECTION
 // ─────────────────────────────────────────────
 function HeroSection({ onShowRules, onGoToResultados }: { onShowRules: () => void; onGoToResultados: () => void }) {
-  // Lista de animales para la animación (usamos los primeros 8)
   const heroAnimals = [
     { num: '05', name: 'leon',      style: { top: '8%',  left: '18%',  animDelay: '0s',    size: 72 } },
     { num: '10', name: 'tigre',     style: { top: '4%',  right: '18%', animDelay: '0.4s',  size: 64 } },
@@ -159,78 +158,46 @@ function HeroSection({ onShowRules, onGoToResultados }: { onShowRules: () => voi
 
   return (
     <div className="hero-section relative overflow-hidden" style={{ minHeight: '520px' }}>
-      {/* Fondo con gradiente */}
       <div className="absolute inset-0 bg-gradient-to-b from-emerald-800/30 to-transparent pointer-events-none" />
-
       <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8 px-2 py-8 max-w-5xl mx-auto">
-        
-        {/* Texto izquierda */}
         <div className="flex-1 text-center md:text-left space-y-5 md:pr-8">
           <div className="inline-flex items-center gap-2 bg-emerald-800/60 border border-emerald-600 rounded-full px-4 py-1.5 text-sm">
             <span className="live-indicator inline-block w-2 h-2 rounded-full bg-green-400"></span>
             Resultados en vivo
           </div>
-
           <h1 className="text-4xl md:text-5xl font-black leading-tight">
             La mejor lotería de{' '}
             <span className="text-yellow-400">animales</span>
           </h1>
-
           <p className="text-emerald-200 text-base md:text-lg">
             Consulta los resultados de los sorteos de animales en tiempo real.{' '}
             <span className="text-yellow-400 font-semibold">¡Juega con confianza con Zoolo CASINO!</span>
           </p>
-
           <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
-            <button
-              onClick={onGoToResultados}
-              className="hero-btn-yellow flex items-center justify-center gap-2"
-            >
+            <button onClick={onGoToResultados} className="hero-btn-yellow flex items-center justify-center gap-2">
               <Trophy className="w-5 h-5" />
               Ver resultados
             </button>
-            <button
-              onClick={onShowRules}
-              className="hero-btn-outline flex items-center justify-center gap-2"
-            >
+            <button onClick={onShowRules} className="hero-btn-outline flex items-center justify-center gap-2">
               <Info className="w-5 h-5" />
               ¿Cómo jugar?
             </button>
           </div>
         </div>
-
-        {/* Móvil con animales flotando */}
         <div className="flex-shrink-0 relative" style={{ width: '260px', height: '420px' }}>
-          {/* Cuerpo del móvil */}
           <div className="mobile-frame absolute inset-x-8 inset-y-0 rounded-3xl border-4 border-emerald-600/60 bg-emerald-900/40 backdrop-blur-sm shadow-2xl z-10">
-            {/* Pantalla interior */}
             <div className="absolute inset-2 rounded-2xl bg-emerald-800/30 border border-emerald-700/40" />
-            {/* Notch */}
             <div className="absolute top-3 left-1/2 -translate-x-1/2 w-12 h-2 bg-emerald-700/60 rounded-full" />
-            {/* Botón home */}
             <div className="absolute bottom-3 left-1/2 -translate-x-1/2 w-8 h-2 bg-emerald-700/60 rounded-full" />
           </div>
-
-          {/* Animales flotando alrededor del móvil */}
           {heroAnimals.map((a, i) => (
-            <div
-              key={i}
-              className="hero-animal absolute z-20"
-              style={{
-                ...a.style,
-                animationDelay: a.style.animDelay,
-                width: a.style.size,
-                height: a.style.size,
-              }}
-            >
+            <div key={i} className="hero-animal absolute z-20" style={{ ...a.style, animationDelay: a.style.animDelay, width: a.style.size, height: a.style.size }}>
               <img
                 src={`/animals/${a.num}-${a.name}.jpg`}
                 alt={a.name}
                 className="w-full h-full rounded-full object-cover border-3 shadow-lg"
                 style={{ border: '3px solid rgba(251,191,36,0.6)', boxShadow: '0 4px 15px rgba(0,0,0,0.4)' }}
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = '/animals/0-delfin.jpg';
-                }}
+                onError={(e) => { (e.target as HTMLImageElement).src = '/animals/0-delfin.jpg'; }}
               />
             </div>
           ))}
@@ -240,9 +207,6 @@ function HeroSection({ onShowRules, onGoToResultados }: { onShowRules: () => voi
   );
 }
 
-// ─────────────────────────────────────────────
-// STATS CARDS
-// ─────────────────────────────────────────────
 function StatsCards() {
   return (
     <div className="grid grid-cols-3 gap-3 md:gap-4">
@@ -265,9 +229,6 @@ function StatsCards() {
   );
 }
 
-// ─────────────────────────────────────────────
-// ANIMAL DEL MOMENTO
-// ─────────────────────────────────────────────
 function AnimalDelMomento({ animal, imageUrl, nextSorteoTime }: { animal: any; imageUrl: string; nextSorteoTime?: string }) {
   return (
     <Card className="animal-momento-card p-6 bg-emerald-800/50 border-emerald-700 max-w-sm mx-auto text-center">
@@ -275,14 +236,9 @@ function AnimalDelMomento({ animal, imageUrl, nextSorteoTime }: { animal: any; i
         <Star className="w-4 h-4 text-yellow-400" />
         <h3 className="text-yellow-400 font-bold text-base">Animal del Momento</h3>
       </div>
-
       {animal ? (
         <div className="space-y-2">
-          <img
-            src={imageUrl}
-            className="w-32 h-32 rounded-2xl mx-auto object-cover border-4 border-yellow-400/40 shadow-lg"
-            alt={animal.name}
-          />
+          <img src={imageUrl} className="w-32 h-32 rounded-2xl mx-auto object-cover border-4 border-yellow-400/40 shadow-lg" alt={animal.name} />
           <div className="text-xl font-bold">{animal.name}</div>
           <div className="text-emerald-300 text-sm">N° {animal.num}</div>
         </div>
@@ -292,18 +248,13 @@ function AnimalDelMomento({ animal, imageUrl, nextSorteoTime }: { animal: any; i
             <Clock className="w-12 h-12 text-emerald-400 clock-spin" />
           </div>
           <div className="font-bold text-lg text-white">Esperando sorteo</div>
-          {nextSorteoTime && (
-            <div className="text-emerald-400 text-sm">Sorteo: {nextSorteoTime}</div>
-          )}
+          {nextSorteoTime && <div className="text-emerald-400 text-sm">Sorteo: {nextSorteoTime}</div>}
         </div>
       )}
     </Card>
   );
 }
 
-// ─────────────────────────────────────────────
-// ADMIN PANEL
-// ─────────────────────────────────────────────
 function AdminPanelContent({ activeAdminTab, getDayState, updateVenezuela, updatePeru, updateTriple, updateTerminal, updateMas1, clearVenezuela, clearPeru, clearTriple, clearTerminal, clearMas1, showToast, adminSelectedDate, setAdminSelectedDate }: any) {
   const [localResults, setLocalResults] = useState<Record<string, string>>({});
   const [showAdminCalendar, setShowAdminCalendar] = useState(false);
@@ -387,13 +338,7 @@ function AdminPanelContent({ activeAdminTab, getDayState, updateVenezuela, updat
                   <div className="text-sm text-emerald-400">{formatTimeDisplay(s.time)}</div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Input
-                    type="text"
-                    value={localResults[s.id] || ''}
-                    onChange={(e) => setLocalResults({ ...localResults, [s.id]: e.target.value })}
-                    placeholder="0-40"
-                    className="w-24 text-center bg-emerald-700 border-emerald-600 text-white"
-                  />
+                  <Input type="text" value={localResults[s.id] || ''} onChange={(e) => setLocalResults({ ...localResults, [s.id]: e.target.value })} placeholder="0-40" className="w-24 text-center bg-emerald-700 border-emerald-600 text-white" />
                   <Button size="sm" variant="destructive" onClick={() => {
                     setLocalResults({ ...localResults, [s.id]: '' });
                     activeAdminTab === 'venezuela' ? clearVenezuela(adminSelectedDate, s.id) : clearPeru(adminSelectedDate, s.id);
@@ -445,21 +390,11 @@ function AdminPanelContent({ activeAdminTab, getDayState, updateVenezuela, updat
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
                 <label className="text-sm text-emerald-300 mb-1 block">Número (0-9)</label>
-                <Input
-                  type="number" min="0" max="9"
-                  value={localResults['mas1_numero'] || ''}
-                  onChange={(e) => setLocalResults({ ...localResults, mas1_numero: e.target.value })}
-                  placeholder="0-9"
-                  className="text-center text-xl font-bold bg-emerald-700 border-emerald-600 text-white"
-                />
+                <Input type="number" min="0" max="9" value={localResults['mas1_numero'] || ''} onChange={(e) => setLocalResults({ ...localResults, mas1_numero: e.target.value })} placeholder="0-9" className="text-center text-xl font-bold bg-emerald-700 border-emerald-600 text-white" />
               </div>
               <div>
                 <label className="text-sm text-emerald-300 mb-1 block">Animalito</label>
-                <select
-                  value={localResults['mas1_animal'] || ''}
-                  onChange={(e) => setLocalResults({ ...localResults, mas1_animal: e.target.value })}
-                  className="w-full p-2 rounded bg-emerald-700 border border-emerald-600 text-white"
-                >
+                <select value={localResults['mas1_animal'] || ''} onChange={(e) => setLocalResults({ ...localResults, mas1_animal: e.target.value })} className="w-full p-2 rounded bg-emerald-700 border border-emerald-600 text-white">
                   <option value="">Seleccionar</option>
                   {ANIMALS.map(a => (<option key={a.num} value={a.num}>{a.num} - {a.name}</option>))}
                 </select>
@@ -505,6 +440,7 @@ function App() {
     login,
     logout,
     checkAuth,
+    syncDate,          // ← CAMBIO 1: agregar syncDate
     updateVenezuela,
     updatePeru,
     updateTriple,
@@ -586,7 +522,6 @@ function App() {
     return { animal: null };
   }, [getSorteos]);
 
-  // Calcular próximo sorteo
   const getNextSorteoTime = useCallback(() => {
     const now = new Date();
     const times = selectedGame === 'peru' ? PERU_TIMES : VENEZUELA_TIMES;
@@ -620,12 +555,7 @@ function App() {
         </div>
         {done && animal ? (
           <>
-            <img
-              src={getAnimalImagePath(animal, country)}
-              className={`sorteo-animal-img-large border-4 ${animal.color === 'rojo' ? 'border-red-500' : animal.color === 'verde' ? 'border-green-500' : 'border-gray-800'}`}
-              onError={(e) => { (e.target as HTMLImageElement).src = '/animals/0-delfin.jpg'; }}
-              alt={animal.name}
-            />
+            <img src={getAnimalImagePath(animal, country)} className={`sorteo-animal-img-large border-4 ${animal.color === 'rojo' ? 'border-red-500' : animal.color === 'verde' ? 'border-green-500' : 'border-gray-800'}`} onError={(e) => { (e.target as HTMLImageElement).src = '/animals/0-delfin.jpg'; }} alt={animal.name} />
             <div className="sorteo-animal-name">{animal.name}</div>
             <div className="sorteo-animal-num">N° {s.result}</div>
           </>
@@ -639,20 +569,26 @@ function App() {
 
   const { animal: aMD } = getAnimalDelMomento();
 
+  // ── CAMBIO 2: goToPrevDay y goToNextDay llaman syncDate ──────────────────
   const goToPrevDay = useCallback(() => {
-    setSelectedDate(prev => new Date(prev.getTime() - 86400000));
-  }, []);
+    const newDate = new Date(selectedDate.getTime() - 86400000);
+    setSelectedDate(newDate);
+    syncDate(newDate);
+  }, [selectedDate, syncDate]);
 
   const goToNextDay = useCallback(() => {
-    setSelectedDate(prev => new Date(prev.getTime() + 86400000));
-  }, []);
+    const newDate = new Date(selectedDate.getTime() + 86400000);
+    setSelectedDate(newDate);
+    syncDate(newDate);
+  }, [selectedDate, syncDate]);
 
   return (
     <div className="min-h-screen bg-emerald-900 text-white">
       {datePickerOpen && (
         <InlineCalendar
           selectedDate={selectedDate}
-          onSelectDate={(date) => { setSelectedDate(date); setDatePickerOpen(false); }}
+          // ── CAMBIO 3: onSelectDate llama syncDate ────────────────────────
+          onSelectDate={(date) => { setSelectedDate(date); syncDate(date); setDatePickerOpen(false); }}
           onClose={() => setDatePickerOpen(false)}
         />
       )}
@@ -663,7 +599,6 @@ function App() {
         </div>
       )}
 
-      {/* LOGIN DIALOG */}
       <Dialog open={loginOpen} onOpenChange={setLoginOpen}>
         <DialogContent className="bg-emerald-900 border-emerald-700 text-white">
           <DialogHeader><DialogTitle>Admin</DialogTitle></DialogHeader>
@@ -675,7 +610,6 @@ function App() {
         </DialogContent>
       </Dialog>
 
-      {/* ADMIN DIALOG */}
       <Dialog open={adminOpen} onOpenChange={setAdminOpen}>
         <DialogContent className="bg-emerald-900 border-emerald-700 text-white max-w-4xl">
           <DialogHeader>
@@ -688,9 +622,7 @@ function App() {
           </DialogHeader>
           <div className="flex gap-2 flex-wrap mb-4">
             {(['venezuela', 'peru', 'triples', 'terminales', 'mas1'] as const).map(t => (
-              <Button key={t} size="sm" onClick={() => setActiveAdminTab(t)} variant={activeAdminTab === t ? 'default' : 'outline'}>
-                {t}
-              </Button>
+              <Button key={t} size="sm" onClick={() => setActiveAdminTab(t)} variant={activeAdminTab === t ? 'default' : 'outline'}>{t}</Button>
             ))}
           </div>
           <AdminPanelContent
@@ -713,7 +645,6 @@ function App() {
         </DialogContent>
       </Dialog>
 
-      {/* NAVBAR */}
       <nav className="sticky top-0 z-40 bg-emerald-900/95 border-b border-emerald-800 h-16 flex items-center justify-between px-4">
         <div className="flex items-center gap-2">
           <img src="/logo.jpg" className="w-10 h-10 rounded-full" alt="Logo" />
@@ -739,7 +670,6 @@ function App() {
         </div>
       </nav>
 
-      {/* MENU MOBILE */}
       {menuOpen && (
         <div className="fixed z-40 bg-emerald-900 p-4 flex flex-col gap-2" style={{ top: '64px', left: 0, right: 0, bottom: 0 }}>
           {(['inicio', 'resultados', 'animales', 'horarios', 'preguntas', 'contacto'] as const).map(s => (
@@ -750,59 +680,32 @@ function App() {
         </div>
       )}
 
-      {/* MAIN CONTENT */}
       <main className="max-w-7xl mx-auto px-4 py-6">
 
-        {/* ── INICIO ── */}
         {activeSection === 'inicio' && (
           <div className="space-y-8">
-
-            {/* Hero con animales flotando */}
-            <HeroSection
-              onShowRules={() => setShowRules(true)}
-              onGoToResultados={() => setActiveSection('resultados')}
-            />
-
-            {/* Stats */}
+            <HeroSection onShowRules={() => setShowRules(true)} onGoToResultados={() => setActiveSection('resultados')} />
             <StatsCards />
-
-            {/* Animal del Momento */}
-            <AnimalDelMomento
-              animal={aMD}
-              imageUrl={aMD ? getAnimalImagePath(aMD, selectedGame === 'peru' ? 'peru' : 'venezuela') : ''}
-              nextSorteoTime={getNextSorteoTime()}
-            />
-
-            {/* Botón ¿Cómo jugar? */}
+            <AnimalDelMomento animal={aMD} imageUrl={aMD ? getAnimalImagePath(aMD, selectedGame === 'peru' ? 'peru' : 'venezuela') : ''} nextSorteoTime={getNextSorteoTime()} />
             <div className="text-center space-y-2">
-              <button
-                onClick={() => setShowRules(true)}
-                className="hero-btn-yellow inline-flex items-center gap-2 mx-auto"
-              >
+              <button onClick={() => setShowRules(true)} className="hero-btn-yellow inline-flex items-center gap-2 mx-auto">
                 <Info className="w-5 h-5" />
                 ¿Cómo jugar ZooloCASINO?
               </button>
               <p className="text-emerald-400 text-sm">Descubre cómo ganar con nuestros diferentes juegos.</p>
             </div>
-
           </div>
         )}
 
-        {/* ── RESULTADOS ── */}
         {activeSection === 'resultados' && (
           <div className="space-y-6">
             <div className="flex justify-center gap-2 flex-wrap">
               {(['venezuela', 'peru', 'triples', 'terminales', 'mas1'] as const).map(g => (
-                <button
-                  key={g}
-                  onClick={() => setSelectedGame(g)}
-                  className={`px-4 py-2 rounded-lg capitalize ${selectedGame === g ? 'bg-yellow-500 text-black font-bold' : 'bg-emerald-800 text-white hover:bg-emerald-700'}`}
-                >
+                <button key={g} onClick={() => setSelectedGame(g)} className={`px-4 py-2 rounded-lg capitalize ${selectedGame === g ? 'bg-yellow-500 text-black font-bold' : 'bg-emerald-800 text-white hover:bg-emerald-700'}`}>
                   {g}
                 </button>
               ))}
             </div>
-
             <div className="flex items-center justify-center gap-4">
               <button onClick={goToPrevDay} className="p-2 bg-emerald-800 rounded-lg hover:bg-emerald-700 active:scale-95 transition-transform touch-manipulation">
                 <ChevronLeft className="w-5 h-5" />
@@ -814,7 +717,6 @@ function App() {
                 <ChevronRight className="w-5 h-5" />
               </button>
             </div>
-
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {(selectedGame === 'venezuela' || selectedGame === 'peru') && getSorteos().map(s => renderAnimalitoCard(s))}
               {selectedGame === 'triples' && tRes.map((s: any) => (
@@ -834,21 +736,11 @@ function App() {
                 return (
                   <div className="col-span-2 md:col-span-3">
                     <div className="mas1-result-card p-6 bg-emerald-800/50 border border-emerald-700 rounded-2xl text-center max-w-xs mx-auto">
-                      {/* Número grande */}
-                      <div className="text-6xl font-black text-yellow-400 mb-1">
-                        {mRes.numero || '?'}
-                      </div>
+                      <div className="text-6xl font-black text-yellow-400 mb-1">{mRes.numero || '?'}</div>
                       <div className="text-emerald-400 text-xs mb-4 uppercase tracking-widest">Número MÁS 1</div>
-
-                      {/* Imagen del animal */}
                       {mas1Animal ? (
                         <>
-                          <img
-                            src={`/animals/${mas1Animal.num}-${mas1Animal.name.toLowerCase().replace(/[áéíóúñü]/g, (x: string) => ({'á':'a','é':'e','í':'i','ó':'o','ú':'u','ñ':'n','ü':'u'}[x]||x))}.jpg`}
-                            alt={mas1Animal.name}
-                            className="w-36 h-36 rounded-full object-cover mx-auto border-4 border-yellow-400/50 shadow-lg mb-3"
-                            onError={(e) => { (e.target as HTMLImageElement).src = '/animals/0-delfin.jpg'; }}
-                          />
+                          <img src={`/animals/${mas1Animal.num}-${mas1Animal.name.toLowerCase().replace(/[áéíóúñü]/g, (x: string) => ({'á':'a','é':'e','í':'i','ó':'o','ú':'u','ñ':'n','ü':'u'}[x]||x))}.jpg`} alt={mas1Animal.name} className="w-36 h-36 rounded-full object-cover mx-auto border-4 border-yellow-400/50 shadow-lg mb-3" onError={(e) => { (e.target as HTMLImageElement).src = '/animals/0-delfin.jpg'; }} />
                           <div className="text-lg font-bold text-white">{mas1Animal.name}</div>
                           <div className="text-emerald-300 text-sm">N° {mRes.animal_num}</div>
                         </>
@@ -866,7 +758,6 @@ function App() {
           </div>
         )}
 
-        {/* ── ANIMALES ── */}
         {activeSection === 'animales' && (
           <div className="space-y-6">
             <div className="relative">
@@ -885,7 +776,6 @@ function App() {
           </div>
         )}
 
-        {/* ── HORARIOS ── */}
         {activeSection === 'horarios' && (
           <div className="space-y-6 text-center">
             <h2 className="text-2xl font-bold">Horarios de Sorteos</h2>
@@ -907,7 +797,6 @@ function App() {
           </div>
         )}
 
-        {/* ── PREGUNTAS ── */}
         {activeSection === 'preguntas' && (
           <div className="space-y-4 max-w-2xl mx-auto">
             <h2 className="text-2xl font-bold text-center mb-6">Preguntas Frecuentes</h2>
@@ -925,7 +814,6 @@ function App() {
           </div>
         )}
 
-        {/* ── CONTACTO ── */}
         {activeSection === 'contacto' && (
           <div className="max-w-md mx-auto text-center space-y-4">
             <h2 className="text-2xl font-bold mb-6">Contacto</h2>
@@ -943,7 +831,6 @@ function App() {
         © 2026 Zoolo CASINO. Todos los derechos reservados.
       </footer>
 
-      {/* REGLAS DIALOG */}
       <Dialog open={showRules} onOpenChange={setShowRules}>
         <DialogContent className="bg-emerald-900 border-emerald-700 text-white max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
