@@ -32,9 +32,6 @@ import './App.css';
 
 const API_URL = "https://zoolocasino-api.onrender.com";
 
-// ─────────────────────────────────────────────
-// COMPONENTE CALENDARIO INLINE
-// ─────────────────────────────────────────────
 interface InlineCalendarProps {
   selectedDate: Date;
   onSelectDate: (date: Date) => void;
@@ -141,9 +138,6 @@ function InlineCalendar({ selectedDate, onSelectDate, onClose }: InlineCalendarP
   );
 }
 
-// ─────────────────────────────────────────────
-// HERO SECTION
-// ─────────────────────────────────────────────
 function HeroSection({ onShowRules, onGoToResultados }: { onShowRules: () => void; onGoToResultados: () => void }) {
   const heroAnimals = [
     { num: '05', name: 'leon',      style: { top: '8%',  left: '18%',  animDelay: '0s',    size: 72 } },
@@ -414,9 +408,6 @@ function AdminPanelContent({ activeAdminTab, getDayState, updateVenezuela, updat
   );
 }
 
-// ─────────────────────────────────────────────
-// APP PRINCIPAL
-// ─────────────────────────────────────────────
 function App() {
   const [selectedGame, setSelectedGame] = useState<'peru' | 'venezuela' | 'triples' | 'terminales' | 'mas1'>('venezuela');
   const [activeSection, setActiveSection] = useState<'inicio' | 'resultados' | 'animales' | 'horarios' | 'preguntas' | 'contacto'>('inicio');
@@ -440,7 +431,7 @@ function App() {
     login,
     logout,
     checkAuth,
-    syncDate,          // ← CAMBIO 1: agregar syncDate
+    syncDate,
     updateVenezuela,
     updatePeru,
     updateTriple,
@@ -569,7 +560,6 @@ function App() {
 
   const { animal: aMD } = getAnimalDelMomento();
 
-  // ── CAMBIO 2: goToPrevDay y goToNextDay llaman syncDate ──────────────────
   const goToPrevDay = useCallback(() => {
     const newDate = new Date(selectedDate.getTime() - 86400000);
     setSelectedDate(newDate);
@@ -587,7 +577,6 @@ function App() {
       {datePickerOpen && (
         <InlineCalendar
           selectedDate={selectedDate}
-          // ── CAMBIO 3: onSelectDate llama syncDate ────────────────────────
           onSelectDate={(date) => { setSelectedDate(date); syncDate(date); setDatePickerOpen(false); }}
           onClose={() => setDatePickerOpen(false)}
         />
@@ -827,8 +816,82 @@ function App() {
 
       </main>
 
-      <footer className="bg-emerald-950 border-t border-emerald-800 py-8 text-center text-xs text-emerald-500 mt-12">
-        © 2026 Zoolo CASINO. Todos los derechos reservados.
+      {/* ── FOOTER NUEVO ── */}
+      <footer className="bg-emerald-950 border-t border-emerald-800 mt-12">
+
+        {/* Carrusel de logos */}
+        <div className="border-b border-emerald-800/60 py-6">
+          <p className="text-center text-emerald-500 text-xs uppercase tracking-widest mb-4 font-medium">
+            Avalado por loterías oficiales
+          </p>
+          <div style={{ overflow: 'hidden', position: 'relative' }}>
+            <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 80, zIndex: 2, background: 'linear-gradient(to right, #022c22, transparent)', pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, width: 80, zIndex: 2, background: 'linear-gradient(to left, #022c22, transparent)', pointerEvents: 'none' }} />
+            <div
+              style={{ display: 'flex', gap: '3rem', alignItems: 'center', width: 'max-content', animation: 'scroll-logos 22s linear infinite', padding: '4px 0' }}
+              onMouseEnter={e => (e.currentTarget.style.animationPlayState = 'paused')}
+              onMouseLeave={e => (e.currentTarget.style.animationPlayState = 'running')}
+            >
+              {[0, 1].map(copy => (
+                <div key={copy} style={{ display: 'flex', gap: '3rem', alignItems: 'center' }}>
+                  <div style={{ opacity: 0.8, display: 'flex', flexDirection: 'column', alignItems: 'center', color: 'white', padding: '0 8px' }}>
+                    <div style={{ fontSize: 8, letterSpacing: 1, opacity: 0.7 }}>SERVICIO AUTÓNOMO</div>
+                    <div style={{ fontSize: 20, fontWeight: 900, letterSpacing: 3, color: '#FFD100' }}>SAREN</div>
+                    <div style={{ display: 'flex', gap: 2, marginTop: 2 }}>
+                      <div style={{ width: 20, height: 5, backgroundColor: '#003893', borderRadius: 2 }} />
+                      <div style={{ width: 20, height: 5, backgroundColor: '#CF142B', borderRadius: 2 }} />
+                      <div style={{ width: 20, height: 5, backgroundColor: '#FFD100', borderRadius: 2 }} />
+                    </div>
+                  </div>
+                  <div style={{ opacity: 0.8, display: 'flex', flexDirection: 'column', alignItems: 'center', color: 'white', padding: '0 8px' }}>
+                    <div style={{ fontSize: 9, letterSpacing: 2, opacity: 0.7 }}>LOTERÍA DE</div>
+                    <div style={{ fontSize: 17, fontWeight: 900, letterSpacing: 2, color: '#f97316' }}>COJEDES</div>
+                  </div>
+                  <div style={{ opacity: 0.8, display: 'flex', flexDirection: 'column', alignItems: 'center', color: 'white', padding: '0 8px' }}>
+                    <div style={{ fontSize: 9, letterSpacing: 2, opacity: 0.7 }}>LOTERÍA</div>
+                    <div style={{ fontSize: 16, fontWeight: 900, fontStyle: 'italic', color: '#34d399' }}>Margarita</div>
+                  </div>
+                  <div style={{ opacity: 0.8, display: 'flex', flexDirection: 'column', alignItems: 'center', color: 'white', padding: '0 8px' }}>
+                    <div style={{ fontSize: 24, fontWeight: 900, letterSpacing: 2, color: '#FFD100' }}>LDO</div>
+                    <div style={{ fontSize: 8, opacity: 0.6, letterSpacing: 1 }}>LOTERÍA DE ORIENTE</div>
+                    <div style={{ fontSize: 7, opacity: 0.5 }}>desde 1950</div>
+                  </div>
+                  <div style={{ opacity: 0.8, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 8px' }}>
+                    <div style={{ width: 52, height: 52, borderRadius: '50%', border: '2.5px solid rgba(255,255,255,0.5)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 10, fontWeight: 800, letterSpacing: 1 }}>
+                      <div>CONA</div>
+                      <div style={{ color: '#FFD100' }}>LOT</div>
+                    </div>
+                  </div>
+                  <div style={{ opacity: 0.8, display: 'flex', flexDirection: 'column', alignItems: 'center', color: 'white', padding: '0 8px' }}>
+                    <div style={{ fontSize: 9, opacity: 0.6 }}>Lotería de</div>
+                    <div style={{ fontSize: 18, fontWeight: 900, letterSpacing: 1 }}>CARACAS</div>
+                    <div style={{ fontSize: 7, opacity: 0.4, fontStyle: 'italic' }}>Fundada en 1811</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Datos legales */}
+        <div className="max-w-4xl mx-auto px-4 py-8 text-center space-y-3">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <img src="/logo.jpg" className="w-8 h-8 rounded-full opacity-70" alt="Logo" />
+            <span className="font-bold text-emerald-300">Zoolo <span className="text-yellow-400">CASINO</span></span>
+          </div>
+          <div className="text-emerald-400 text-sm font-semibold">
+            Operadora de Juegos Activos, C.A.
+          </div>
+          <div className="flex flex-wrap justify-center gap-x-6 gap-y-1 text-emerald-600 text-xs">
+            <span>RIF N° J-60378125-0</span>
+            <span className="hidden sm:inline">·</span>
+            <span>Registro Nacional de Lotería N° 03-000098-2024</span>
+          </div>
+          <div className="pt-3 border-t border-emerald-800/50 text-emerald-600 text-xs">
+            © 2018 ZooloCASINO. Todos los derechos reservados.
+          </div>
+        </div>
+
       </footer>
 
       <Dialog open={showRules} onOpenChange={setShowRules}>
