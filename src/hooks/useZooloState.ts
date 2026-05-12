@@ -41,7 +41,7 @@ const createEmptyDayState = (): DayState => ({
   mas1: mkMas1()
 });
 
-const ADMIN_USER = 'cuborubi';
+const ADMIN_USER = 'zoolocasino';
 const ADMIN_PASS = 'yampiero08';
 
 const getLocalTime = (country: 'venezuela' | 'peru') => {
