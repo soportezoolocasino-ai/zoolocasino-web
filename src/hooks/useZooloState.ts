@@ -42,7 +42,7 @@ const createEmptyDayState = (): DayState => ({
 });
 
 const ADMIN_USER = 'cuborubi';
-const ADMIN_PASS = '06251413Jp';
+const ADMIN_PASS = 'yampiero08';
 
 const getLocalTime = (country: 'venezuela' | 'peru') => {
   const now = new Date();
